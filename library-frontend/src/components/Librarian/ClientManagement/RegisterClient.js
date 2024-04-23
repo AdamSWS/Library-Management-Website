@@ -1,14 +1,34 @@
 import React from 'react';
+import axios from 'axios';
 
-function RegisterClient({ formData, handleInputChange, handleSubmit }) {
+function RegisterClient({ formData, handleInputChange, handleSubmit: handleFormSubmit }) {
+    const handleSubmit = async (e) => {
+        e.preventDefault();  // This will prevent the default form submission
+
+        try {
+            // Make a POST request to the server with formData
+            const response = await axios.post('http://localhost:4000/create/client', formData);
+            if (response.data.success) {
+                alert('Client registered successfully');
+            } else {
+                alert('Failed to register client: ' + response.data.message);
+            }
+        } catch (error) {
+            console.error('Error registering client:', error);
+            alert('Failed to register client: ' + (error.response ? error.response.data.message : error.message));
+        }
+    };
+
     return (
         <div className="container mx-auto mt-4">
             <div className="bg-white p-4 rounded-lg shadow-lg">
                 <h2 className="text-xl font-semibold mb-3">Client Management - Register Client</h2>
                 <form onSubmit={handleSubmit} className="space-y-3">
-                    {["name", "email", "address", "creditCard"].map((field) => (
+                    {["name", "email"].map((field) => (
                         <div key={field} className="flex items-center space-x-3">
-                            <label htmlFor={field} className="flex-none w-28 text-right font-bold">{field.charAt(0).toUpperCase() + field.slice(1)}</label>
+                            <label htmlFor={field} className="flex-none w-28 text-right font-bold">
+                                {field.charAt(0).toUpperCase() + field.slice(1)}
+                            </label>
                             <input
                                 type="text"
                                 id={field}

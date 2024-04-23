@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 export default function DeleteDocument() {
     const [documentId, setDocumentId] = useState('');
@@ -7,9 +8,24 @@ export default function DeleteDocument() {
         setDocumentId(e.target.value);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Deleting Document ID:', documentId);
+        if (!documentId) {
+            alert("Please enter a Document ID.");
+            return;
+        }
+        try {
+            const response = await axios.delete(`http://localhost:4000/delete/document/${documentId}`);
+            if (response.data.success) {
+                alert('Document deleted successfully');
+            } else {
+                alert(response.data.message);  // Display the message from the server
+            }
+        } catch (error) {
+            console.error('Error deleting document:', error);
+            alert('Failed to delete document: ' + (error.response ? error.response.data.message : error.message));
+        }
+        setDocumentId('');  // Clear the input after submission
     };
 
     return (
