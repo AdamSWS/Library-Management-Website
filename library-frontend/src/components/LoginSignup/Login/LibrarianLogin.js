@@ -3,16 +3,13 @@ import { Form, Button } from 'react-bootstrap';
 import axios from 'axios';
 
 export default function LibrarianLogin({ onLogin }) {
-    // data needed for Postgres database
     const [email, setEmail] = useState('');
     const [ssn, setSSN] = useState('');
     const [error, setError] = useState('');
 
-    // button handler for submitting librarian data
     const handleSubmit = async (event) => {
         event.preventDefault();
         try {
-            // attempt to connect to server
             const response = await axios.post('http://localhost:4000/login/librarian', { email, ssn });
             if (response.data.success) {
                 onLogin({ role: 'librarian', email, ssn, ...response.data.user });

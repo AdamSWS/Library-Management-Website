@@ -53,7 +53,7 @@ function EditClient() {
             const response = await axios.post('http://localhost:4000/update/client', updateData);
             if (response.data.success) {
                 alert('Client updated successfully');
-                setIsFetched(false); // Optionally reset form or fetch state
+                setIsFetched(false);
             } else {
                 alert('Failed to update client');
             }

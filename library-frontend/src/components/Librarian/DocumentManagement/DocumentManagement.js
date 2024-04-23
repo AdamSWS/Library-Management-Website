@@ -24,11 +24,9 @@ export default function DocumentManagement() {
 
     const handleEdit = (e) => {
         e.preventDefault();
-        // Update logic here
     };
 
     const handleDelete = () => {
-        // Delete logic here
     };
 
     return (

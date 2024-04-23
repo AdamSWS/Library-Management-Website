@@ -4,7 +4,6 @@ import LibrarianSignup from './LibrarianSignup';
 import ClientSignup from './ClientSignup';
 
 export default function Signup({ onSignup, onToggleLogin }) {
-    // Signup Screen trigger
     const [role, setRole] = useState('');
 
     return (

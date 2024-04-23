@@ -3,16 +3,13 @@ import { Form, Button } from 'react-bootstrap';
 import axios from 'axios';
 
 export default function ClientLogin({ onLogin }) {
-    // data needed for Postgres database
     const [email, setEmail] = useState('');
     const [name, setName] = useState('');
     const [error, setError] = useState('');
 
-    // button handler for submitting client data
     const handleSubmit = async (event) => {
         event.preventDefault();
         try {
-            // attempt to connect to server
             const response = await axios.post('http://localhost:4000/login/client', { email, name });
             if (response.data.success) {
                 onLogin({ role: 'client', email, ...response.data.user });

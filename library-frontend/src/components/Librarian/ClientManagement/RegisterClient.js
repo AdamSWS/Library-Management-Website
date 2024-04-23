@@ -3,10 +3,9 @@ import axios from 'axios';
 
 function RegisterClient({ formData, handleInputChange, handleSubmit: handleFormSubmit }) {
     const handleSubmit = async (e) => {
-        e.preventDefault();  // This will prevent the default form submission
+        e.preventDefault();
 
         try {
-            // Make a POST request to the server with formData
             const response = await axios.post('http://localhost:4000/create/client', formData);
             if (response.data.success) {
                 alert('Client registered successfully');

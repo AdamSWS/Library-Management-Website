@@ -3,18 +3,15 @@ import { Form, Button } from 'react-bootstrap';
 import axios from 'axios';
 
 export default function LibrarianSignup({ onSignup }) {
-    // data needed for Postgres database
     const [ssn, setSSN] = useState('');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [salary, setSalary] = useState('');
     const [error, setError] = useState('');
 
-    // button handler for submitting librarian data
     const handleSubmit = async (event) => {
         event.preventDefault();
         try {
-            // attempt to connect to server
             const response = await axios.post('http://localhost:4000/signup/librarian', { ssn, name, email, salary });
             if (response.data.success) {
                 onSignup({ role: 'librarian', email, ssn, ...response.data.user });

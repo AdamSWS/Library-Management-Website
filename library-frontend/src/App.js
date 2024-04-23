@@ -6,9 +6,7 @@ import LibrarianDashboard from './components/Librarian/LibrarianDashboard';
 import ClientDashboard from './components/Client/ClientDashboard';
 import backgroundImage from './assets/library_background_image.jpeg';
 
-// main page of the library manager
 function App() {
-    // user info, this is what gets passed into other components to make logic work
     const [user, setUser] = useState(null);
 
     const handleLogin = (userData) => {
@@ -22,7 +20,6 @@ function App() {
 
     return (
         <div className="min-h-screen bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImage})` }}>
-            {/* Either displays the login screen, the dashboard for the librarian, or the dashboard for the client. */}
             <LibManagerNavbar userRole={user?.role} onLogout={handleLogout} />
             {!user ? (
                 <LoginScreen onLogin={handleLogin} />

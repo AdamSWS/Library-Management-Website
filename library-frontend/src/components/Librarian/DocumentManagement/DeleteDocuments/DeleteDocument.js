@@ -19,13 +19,13 @@ export default function DeleteDocument() {
             if (response.data.success) {
                 alert('Document deleted successfully');
             } else {
-                alert(response.data.message);  // Display the message from the server
+                alert(response.data.message);
             }
         } catch (error) {
             console.error('Error deleting document:', error);
             alert('Failed to delete document: ' + (error.response ? error.response.data.message : error.message));
         }
-        setDocumentId('');  // Clear the input after submission
+        setDocumentId('');
     };
 
     return (

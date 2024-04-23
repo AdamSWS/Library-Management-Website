@@ -3,12 +3,10 @@ import { Nav, Navbar, Button } from "react-bootstrap";
 import logoImage from '../../assets/logo_lib_manager.png';
 
 export default function LibManagerNavbar({ userRole, onLogout }) {
-    // displays the role of the currently signed in user (data thats used to trigger displays in App.js)
     const displayRole = userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : "N/A";
 
     return (
         <Navbar expand="lg" className="bg-blue-600 shadow-lg py-2 px-5 flex items-center justify-between">
-            {/* Simple Bootstrap Navbar */}
             <Navbar.Brand href="#home" className="text-white text-xl font-semibold flex items-center">
                 <img src={logoImage} alt="Library Logo" className="h-12 mr-2.5" />
                 LIBRARY MANAGER

@@ -14,7 +14,7 @@ export default function UpdateDocument() {
         month: '',
         issue: '',
         article_number: '',
-        type: ''  // Document type to handle form changes
+        type: ''
     });
     const [isFetched, setIsFetched] = useState(false);
 
@@ -59,9 +59,8 @@ export default function UpdateDocument() {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();  // Prevent the default form submission behavior
-    
-        // Prepare the data object based on the type of the document
+        e.preventDefault();
+
         const updateData = {
             id: documentData.id,
             title: documentData.title,
@@ -69,10 +68,9 @@ export default function UpdateDocument() {
             isbn: documentData.isbn,
             publisher: documentData.publisher,
             year: documentData.year,
-            type: documentData.type  // This should be set during the document fetch
+            type: documentData.type
         };
     
-        // Conditionally add type-specific properties
         if (documentData.type === 'Book') {
             updateData.edition = documentData.edition;
             updateData.pages = documentData.pages;

@@ -3,7 +3,6 @@ import Login from './Login/Login';
 import Signup from './Signup/Signup';
 
 export default function LoginScreen({ onLogin }) {
-    // triggering data for login screen
     const [showLogin, setShowLogin] = useState(true);
 
     const handleToggle = () => {
