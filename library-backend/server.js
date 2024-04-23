@@ -175,7 +175,6 @@ app.get('/document/:id', async (req, res) => {
     const { id } = req.params;
 
     try {
-        // Fetch basic document data
         const docQuery = 'SELECT * FROM public."Document" WHERE document_id = $1';
         const docResult = await pool.query(docQuery, [id]);
         if (docResult.rows.length === 0) {
@@ -183,14 +182,12 @@ app.get('/document/:id', async (req, res) => {
         }
         const document = docResult.rows[0];
 
-        // Prepare to fetch details from potentially related tables
         const queries = [
             pool.query('SELECT * FROM public."Book" WHERE document_id = $1', [id]),
             pool.query('SELECT * FROM public."Magazine" WHERE document_id = $1', [id]),
             pool.query('SELECT * FROM public."JournalArticle" WHERE document_id = $1', [id])
         ];
 
-        // Execute all queries concurrently
         const results = await Promise.all(queries);
         let details = null;
         let type = '';
@@ -198,7 +195,6 @@ app.get('/document/:id', async (req, res) => {
 
         if (detailsIndex !== -1) {
             details = results[detailsIndex].rows[0];
-            // Determine the type based on the index of the details
             switch (detailsIndex) {
                 case 0:
                     type = 'Book';
@@ -210,15 +206,14 @@ app.get('/document/:id', async (req, res) => {
                     type = 'JournalArticle';
                     break;
                 default:
-                    type = 'Unknown'; // In case of unexpected index
+                    type = 'Unknown';
             }
         }
 
-        // Combine document info with details
         const result = {
             ...document,
             details: details,
-            type: type  // Include the type of document
+            type: type
         };
 
         res.json({ success: true, data: result });
@@ -232,9 +227,8 @@ app.delete('/delete/document/:id', async (req, res) => {
     const { id } = req.params;
 
     try {
-        await pool.query('BEGIN');  // Start a new transaction
+        await pool.query('BEGIN');
 
-        // Fetch the document type first to decide which table to delete from
         const docTypeQuery = 'SELECT document_type FROM public."Document" WHERE document_id = $1';
         const typeResult = await pool.query(docTypeQuery, [id]);
         if (typeResult.rows.length === 0) {
@@ -247,7 +241,6 @@ app.delete('/delete/document/:id', async (req, res) => {
 
         switch (documentType) {
             case 'paper':
-                // Check if it's a book or magazine
                 const checkBook = 'SELECT * FROM public."Book" WHERE document_id = $1';
                 const bookResult = await pool.query(checkBook, [id]);
                 if (bookResult.rows.length > 0) {
@@ -264,17 +257,15 @@ app.delete('/delete/document/:id', async (req, res) => {
                 return res.status(400).json({ success: false, message: "Invalid document type" });
         }
 
-        // Delete the specific document details first
         await pool.query(deleteDetailQuery, [id]);
 
-        // Then delete the document itself
         const deleteDocQuery = 'DELETE FROM public."Document" WHERE document_id = $1';
         await pool.query(deleteDocQuery, [id]);
 
-        await pool.query('COMMIT');  // Commit the transaction
+        await pool.query('COMMIT');
         res.json({ success: true, message: "Document and related data deleted successfully" });
     } catch (error) {
-        await pool.query('ROLLBACK');  // Roll back the transaction in case of an error
+        await pool.query('ROLLBACK');
         console.error("Error deleting document:", error);
         res.status(500).json({ success: false, message: "Failed to delete document" });
     }
@@ -316,7 +307,7 @@ app.post('/update/document', async (req, res) => {
                     UPDATE public."JournalArticle"
                     SET journal_name = $1, issue_number = $2, article_number = $3
                     WHERE document_id = $4`;
-                params = [publisher, issue_number, article_number, id]; // Assuming 'publisher' field holds 'journal_name' for simplicity
+                params = [publisher, issue_number, article_number, id];
                 break;
         }
 
@@ -382,7 +373,6 @@ app.post('/update/client', async (req, res) => {
     }
 
     try {
-        // Check if the client exists with the current email
         const clientExist = await pool.query('SELECT * FROM public."Clients" WHERE email = $1', [currentEmail]);
         if (clientExist.rows.length === 0) {
             return res.status(404).json({ success: false, message: "Client not found." });

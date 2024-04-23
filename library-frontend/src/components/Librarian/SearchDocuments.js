@@ -16,9 +16,6 @@ export default function SearchDocuments() {
     };
 
     const handleSearch = async () => {
-        setLoading(true);
-        // Simulate a search request
-        setLoading(false);
     };
 
     return (
