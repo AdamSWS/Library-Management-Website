@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PersonalClientSettings from './PersonalClientSettings';
 import PaymentMethodSettings from './PaymentMethodSettings';
 import OverdueFees from '../OverdueFees';
+import MyLoans from '../MyLoans';
 
 export default function ClientSettings() {
     const [clientInfo, setClientInfo] = useState({
@@ -23,6 +24,7 @@ export default function ClientSettings() {
                 <PersonalClientSettings settings={clientInfo} onSave={setClientInfo} />
                 <PaymentMethodSettings methods={paymentMethods} onUpdate={setPaymentMethods} preferredPaymentMethod={preferredPaymentMethod} setPreferredPaymentMethod={setPreferredPaymentMethod} />
                 <OverdueFees preferredPaymentMethod={preferredPaymentMethod} />
+                <MyLoans preferredPaymentMethod={preferredPaymentMethod} />
             </div>
         </div>
     );

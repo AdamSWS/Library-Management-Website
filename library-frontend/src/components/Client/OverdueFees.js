@@ -19,8 +19,15 @@ export default function OverdueFees({preferredPaymentMethod}) {
         const currentDate = new Date();
         const due = new Date(dueDate);
         const differenceInDays = Math.floor((currentDate - due) / (1000 * 60 * 60 * 24));
-        const fee = differenceInDays > 0 ? differenceInDays * 2 : 0;
-        return fee;
+        const differenceInWeeks = Math.floor((currentDate - due) / (1000 * 60 * 60 * 24 * 7));
+        const fee = differenceInWeeks > 0 ? differenceInWeeks * 5 + 5 : 0;
+        const fee2 = differenceInDays > 0 ? 5 : 0;
+        if (fee2 > 0 && fee == 0) {
+            return fee2;
+        }
+        else {
+            return fee;
+        }
     };
 
     const handlePayFee = () => {
