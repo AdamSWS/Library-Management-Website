@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PersonalClientSettings from './PersonalClientSettings';
 import PaymentMethodSettings from './PaymentMethodSettings';
+import OverdueFees from '../OverdueFees';
 import ClientAddresses from './ClientAddresses';
 
 export default function ClientSettings() {
@@ -63,13 +64,19 @@ export default function ClientSettings() {
 
     
 
+    const [preferredPaymentMethod, setPreferredPaymentMethod] = useState(paymentMethods.find(method => method.id === 1).cardNumber);
+
     return (
         <div className="container mx-auto mt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <PersonalClientSettings settings={clientInfo} onSave={setClientInfo} />
+                <PaymentMethodSettings methods={paymentMethods} onUpdate={setPaymentMethods} preferredPaymentMethod={preferredPaymentMethod} setPreferredPaymentMethod={setPreferredPaymentMethod} />
+                <OverdueFees preferredPaymentMethod={preferredPaymentMethod} />
                 <PaymentMethodSettings methods={clientInfo.paymentMethods} userEmail={clientInfo.email} addresses={clientInfo.addresses} onUpdate={(paymentMethods) => setClientInfo({ ...clientInfo, paymentMethods })} />
                 <ClientAddresses addresses={clientInfo.addresses} userEmail={clientInfo.email} onUpdate={(addresses)  => setClientInfo({ ...clientInfo, addresses })} />
             </div>
         </div>
     );
 }
+
+export { ClientSettings };
