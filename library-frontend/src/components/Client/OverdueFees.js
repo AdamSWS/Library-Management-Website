@@ -1,58 +1,30 @@
 import React, { useState } from 'react';
 
-export default function OverdueFees({preferredPaymentMethod}) {
-    const [overdueItems, setOverdueItems] = useState([
-        { id: 1, title: "To Kill a Mockingbird", dueDate: "2024-04-25" },
-        { id: 2, title: "Hunger Games", dueDate: "2024-03-25" }
-    ]);
-    const [selectedItemIds, setSelectedItemIds] = useState([]);
-    const payMethod = preferredPaymentMethod;
-    const handleCheckboxChange = (itemId) => {
-        if (selectedItemIds.includes(itemId)) {
-            setSelectedItemIds(selectedItemIds.filter(id => id !== itemId));
-        } else {
-            setSelectedItemIds([...selectedItemIds, itemId]);
-        }
-    };
-
-    const calculateFee = (dueDate) => {
-        const currentDate = new Date();
-        const due = new Date(dueDate);
-        const differenceInDays = Math.floor((currentDate - due) / (1000 * 60 * 60 * 24));
-        const fee = differenceInDays > 0 ? differenceInDays * 2 : 0;
-        return fee;
-    };
+export default function OverdueFees() {
+    const [overdueItems, setOverdueItems] = useState([]);
+    const [selectedItemId, setSelectedItemId] = useState(null);
 
     const handlePayFee = () => {
-        if (selectedItemIds.length === 0) return;
-
-        const confirmed = window.confirm("Pay with selected card: " + payMethod + "?");
-        if (!confirmed) return;
-
-        const updatedItems = overdueItems.filter(item => !selectedItemIds.includes(item.id));
-        setOverdueItems(updatedItems);
-        const selectedTitles = selectedItemIds.map(id => overdueItems.find(item => item.id === id).title);
-        const totalFee = selectedItemIds.reduce((total, id) => total + calculateFee(overdueItems.find(item => item.id === id).dueDate), 0);
-        alert(`Fees paid for: ${selectedTitles.join(', ')}. Total Fee: $${totalFee}`);
-        setSelectedItemIds([]);
+        if (!selectedItemId) return;
+        setOverdueItems(overdueItems.filter(item => item.id !== selectedItemId));
+        alert(`Fee paid for document ID: ${selectedItemId}`);
     };
 
     return (
         <div className="container-fluid mt-4">
             <div className="card shadow-lg">
-                <div className="card-header">
+            <div className="card-header">
                     <h2 className="h4 font-weight-bold">Overdue Fees</h2>
                 </div>
                 <div className="card-body">
                     <div className="mb-3">
-                        <button onClick={handlePayFee} disabled={selectedItemIds.length === 0} className="btn btn-danger">Pay Fee for Selected</button>
+                        <button onClick={handlePayFee} disabled={!selectedItemId} className="btn btn-danger">Pay Fee for Selected</button>
                     </div>
                     {overdueItems.length > 0 ? (
                         <div style={{ overflowY: 'auto', height: '300px' }}>
                             <table className="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Select</th>
                                         <th>Title</th>
                                         <th>Due Date</th>
                                         <th>Fee</th>
@@ -60,17 +32,10 @@ export default function OverdueFees({preferredPaymentMethod}) {
                                 </thead>
                                 <tbody>
                                     {overdueItems.map((item) => (
-                                        <tr key={item.id} className={selectedItemIds.includes(item.id) ? "table-primary" : ""}>
-                                            <td>
-                                                <input
-                                                    type="checkbox"
-                                                    onChange={() => handleCheckboxChange(item.id)}
-                                                    checked={selectedItemIds.includes(item.id)}
-                                                />
-                                            </td>
+                                        <tr key={item.id} onClick={() => setSelectedItemId(item.id)} className={selectedItemId === item.id ? "table-primary" : ""}>
                                             <td>{item.title}</td>
                                             <td>{item.dueDate}</td>
-                                            <td>${calculateFee(item.dueDate)}</td>
+                                            <td>${item.fee}</td>
                                         </tr>
                                     ))}
                                 </tbody>
