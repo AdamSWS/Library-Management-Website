@@ -17,6 +17,19 @@ export default function SearchDocuments() {
 
     const handleSearch = async () => {
         
+        setLoading(true);
+        //post request to the server
+        const response = await fetch('http://localhost:4000/search/documents', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(searchParams)
+        });
+        const data = await response.json();
+        setResults(data.data);
+        setLoading(false);
+        console.log(data);
     };
 
     return (

@@ -394,7 +394,131 @@ app.post('/update/client', async (req, res) => {
     }
 });
 
+
+app.post('/search/documents', async (req, res) => {
+    const { query, type } = req.body;
+    console.log(query, type);
+    console.log(req.body);
+    //to do
+    // detect if query is title, author or ISBN
+    // isbn is a number
+    // author is a string
+    // title is a string
+    
+    switch (type){
+        case 'All':
+            try {
+                // search for documents with title, author or ISBN matching the query
+                // use ILIKE for case-insensitive search
+                // get isbns from books and magazines
+                // get authors from documentauthor and authors
+                // combine results
+                const searchQuery = `
+                SELECT d.title, 
+                    CAST(COALESCE(b.isbn, m.isbn) AS VARCHAR) AS isbn, 
+                    STRING_AGG(a.name, ', ') AS authors,
+                    d.year AS year
+                FROM public."Document" d
+                LEFT JOIN public."Book" b ON d.document_id = b.document_id
+                LEFT JOIN public."Magazine" m ON d.document_id = m.document_id
+                LEFT JOIN public."JournalArticle" ja ON d.document_id = ja.document_id 
+                LEFT JOIN public."DocumentAuthor" da ON d.document_id = da.document_id
+                LEFT JOIN public."Author" a ON da.author_id = a.author_id
+                WHERE d.title ILIKE $1 OR COALESCE(b.isbn, m.isbn) ILIKE $1 OR a.name ILIKE $1
+                GROUP BY d.title, COALESCE(b.isbn, m.isbn), d.year
+                ORDER BY d.title`;
+                const searchResult = await pool.query(searchQuery, [`%${query}%`]);
+                res.status(200).json({ success: true, data: searchResult.rows });
+            } catch (error) {
+                console.error("Error searching documents:", error);
+                res.status(500).json({ success: false, message: "Server error",data:[]  });
+            }
+            break;
+        case 'Book':
+            // search for books with title, author or ISBN matching the query
+            // use ILIKE for case-insensitive search
+            // get isbns from books
+            // get authors from documentauthor and authors
+            // combine results
+            try {
+                const searchQuery = `
+                SELECT d.title,
+                    b.isbn,
+                    STRING_AGG(a.name, ', ') AS authors,
+                    d.year AS year
+                FROM public."Document" d
+                JOIN public."Book" b ON d.document_id = b.document_id
+                LEFT JOIN public."DocumentAuthor" da ON d.document_id = da.document_id
+                LEFT JOIN public."Author" a ON da.author_id = a.author_id
+                WHERE d.title ILIKE $1 OR b.isbn ILIKE $1 OR a.name ILIKE $1
+                GROUP BY d.title, b.isbn, d.year
+                ORDER BY d.title`;
+                const searchResult = await pool.query(searchQuery, [`%${query}%`]);
+                res.status(200).json({ success: true, data: searchResult.rows });
+            } catch (error) {
+                console.error("Error searching books:", error);
+                res.status(500).json({ success: false, message: "Server error",data:[] });
+            }
+            break;
+        case 'Magazine':
+            // search for magazines with title, author or ISBN matching the query
+            // use ILIKE for case-insensitive search
+            // get isbns from magazines
+            // get authors from documentauthor and authors
+            // combine results
+            try{
+                const searchQuery = `
+                SELECT d.title,
+                    m.isbn,
+                    STRING_AGG(a.name, ', ') AS authors,
+                    d.year AS year
+                FROM public."Document" d
+                JOIN public."Magazine" m ON d.document_id = m.document_id
+                LEFT JOIN public."DocumentAuthor" da ON d.document_id = da.document_id
+                LEFT JOIN public."Author" a ON da.author_id = a.author_id
+                WHERE d.title ILIKE $1 OR m.isbn ILIKE $1 OR a.name ILIKE $1
+                GROUP BY d.title, m.isbn, d.year
+                ORDER BY d.title`;
+                const searchResult = await pool.query(searchQuery, [`%${query}%`]);
+                res.status(200).json({ success: true, data: searchResult.rows });
+            } catch (error){
+                console.error("Error searching magazines:", error);
+                res.status(500).json({ success: false, message: "Server error",data:[] });
+            }
+            
+            break;
+        case 'Journal Article':
+            // search for journal articles with title, author or ISBN matching the query
+            // use ILIKE for case-insensitive search
+            // get authors from documentauthor and authors
+            // combine results
+            const searchQuery = `
+            SELECT d.title,
+                ja.journal_name AS journal,
+                ja.issue_number AS issue,
+                ja.article_number AS article,
+                d.year AS year
+            FROM public."Document" d
+            JOIN public."JournalArticle" ja ON d.document_id = ja.document_id
+            LEFT JOIN public."DocumentAuthor" da ON d.document_id = da.document_id
+            LEFT JOIN public."Author" a ON da.author_id = a.author_id
+            WHERE d.title ILIKE $1 OR ja.journal_name ILIKE $1 OR a.name ILIKE $1
+            ORDER BY d.title`;
+            try {
+                const searchResult = await pool.query(searchQuery, [`%${query}%`]);
+                res.status(200).json({ success: true, data: searchResult.rows });
+            } catch (error) {
+                console.error("Error searching journal articles:", error);
+                res.status(500).json({ success: false, message: "Server error",data:[] });
+            }
+            break;
+        default:
+            res.status(400).json({ success: false, message: "Invalid document type" ,data:[] });
+    }
+});
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+
 });
