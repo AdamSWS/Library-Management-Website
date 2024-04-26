@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 
-export default function OverdueFees() {
+export default function OverdueFees({preferredPaymentMethod}) {
     const [overdueItems, setOverdueItems] = useState([
         { id: 1, title: "To Kill a Mockingbird", dueDate: "2024-04-25" },
         { id: 2, title: "Hunger Games", dueDate: "2024-03-25" }
     ]);
     const [selectedItemIds, setSelectedItemIds] = useState([]);
-    const payMethod = '**** **** **** 1234';
-
+    const payMethod = preferredPaymentMethod;
     const handleCheckboxChange = (itemId) => {
         if (selectedItemIds.includes(itemId)) {
             setSelectedItemIds(selectedItemIds.filter(id => id !== itemId));

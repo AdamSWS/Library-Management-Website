@@ -1,12 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 function PaymentMethodSettings({ methods, onUpdate, preferredPaymentMethod, setPreferredPaymentMethod }) {
-    const [initialRender, setInitialRender] = useState(true);
-
-    useEffect(() => {
-        // After initial render, setInitialRender to false
-        setInitialRender(false);
-    }, []);
+    const [initialPrimaryPressed, setInitialPrimaryPressed] = useState(false);
 
     const handleDelete = (id) => {
         onUpdate(methods.filter(m => m.id !== id));
@@ -20,8 +15,11 @@ function PaymentMethodSettings({ methods, onUpdate, preferredPaymentMethod, setP
     const handleSetPreferredPaymentMethod = (method) => {
         const confirmed = window.confirm("Are you sure you want to update your preferred payment method?");
         if (confirmed) {
-            alert(`Primary payment method updated to ` + method.cardNumber);
+            if (!initialPrimaryPressed) {
+                setInitialPrimaryPressed(true);
+            }
             setPreferredPaymentMethod(method.cardNumber);
+            alert(`Primary payment method updated to ${method.cardNumber}`);
         }
     };
 
@@ -31,14 +29,10 @@ function PaymentMethodSettings({ methods, onUpdate, preferredPaymentMethod, setP
             {methods.map((method, index) => (
                 <div key={method.id} className="flex items-center space-x-3 mb-2">
                     <span className="flex-auto">{method.cardNumber} (Exp: {method.expiry})</span>
-                    {initialRender && index === 0 ? (
+                    {(index === 0 && !initialPrimaryPressed) || preferredPaymentMethod === method.cardNumber ? (
                         <button className="btn btn-secondary" disabled>Primary Payment</button>
                     ) : (
-                        preferredPaymentMethod === method.cardNumber ? (
-                            <button className="btn btn-secondary" disabled>Primary Payment</button>
-                        ) : (
-                            <button onClick={() => handleSetPreferredPaymentMethod(method)} className="btn btn-primary">Primary Payment</button>
-                        )
+                        <button onClick={() => handleSetPreferredPaymentMethod(method)} className="btn btn-primary">Primary Payment</button>
                     )}
                     <button onClick={() => handleDelete(method.id)} className="btn btn-danger">Delete</button>
                 </div>
