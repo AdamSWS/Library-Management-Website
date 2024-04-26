@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 
 export default function OverdueFees() {
     const [overdueItems, setOverdueItems] = useState([
-        { id: 1, title: "To Kill a Mockingbird", dueDate: "2024-04-25", fee: 2 },
-        { id: 2, title: "Hunger Games", dueDate: "2024-03-25", fee: 20 }
+        { id: 1, title: "To Kill a Mockingbird", dueDate: "2024-04-25" },
+        { id: 2, title: "Hunger Games", dueDate: "2024-03-25" }
     ]);
     const [selectedItemIds, setSelectedItemIds] = useState([]);
+    const payMethod = '**** **** **** 1234';
 
     const handleCheckboxChange = (itemId) => {
         if (selectedItemIds.includes(itemId)) {
@@ -15,12 +16,25 @@ export default function OverdueFees() {
         }
     };
 
+    const calculateFee = (dueDate) => {
+        const currentDate = new Date();
+        const due = new Date(dueDate);
+        const differenceInDays = Math.floor((currentDate - due) / (1000 * 60 * 60 * 24));
+        const fee = differenceInDays > 0 ? differenceInDays * 2 : 0;
+        return fee;
+    };
+
     const handlePayFee = () => {
         if (selectedItemIds.length === 0) return;
+
+        const confirmed = window.confirm("Pay with selected card: " + payMethod + "?");
+        if (!confirmed) return;
+
         const updatedItems = overdueItems.filter(item => !selectedItemIds.includes(item.id));
         setOverdueItems(updatedItems);
         const selectedTitles = selectedItemIds.map(id => overdueItems.find(item => item.id === id).title);
-        alert(`Fees paid for: ${selectedTitles.join(', ')}`);
+        const totalFee = selectedItemIds.reduce((total, id) => total + calculateFee(overdueItems.find(item => item.id === id).dueDate), 0);
+        alert(`Fees paid for: ${selectedTitles.join(', ')}. Total Fee: $${totalFee}`);
         setSelectedItemIds([]);
     };
 
@@ -57,7 +71,7 @@ export default function OverdueFees() {
                                             </td>
                                             <td>{item.title}</td>
                                             <td>{item.dueDate}</td>
-                                            <td>${item.fee}</td>
+                                            <td>${calculateFee(item.dueDate)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
