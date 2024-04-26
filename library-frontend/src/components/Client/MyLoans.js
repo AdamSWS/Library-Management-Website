@@ -17,6 +17,7 @@ function calculateOverdueFee(returnDate, isOverdue) {
     return 5 + 5 * diffWeeks; // Base fee + incremental fee per overdue week
 }
 
+
 export default function MyLoans({ user }) {
     const [loans, setLoans] = useState([]);
     const [selectedLoanId, setSelectedLoanId] = useState(null);
@@ -27,22 +28,38 @@ export default function MyLoans({ user }) {
         }
     }, [user]);
 
+    useEffect(() => {
+        if (user?.email) {
+            fetchLoans();
+        }
+    }, [user]);
+
+    const checkForCard = async () => {
+        try {
+            const response = await axios.get(`http://localhost:4000/client/${user.email}/hasCard`);
+            return response.data.hasCard;
+        } catch (error) {
+            console.error('Error checking for card:', error);
+            alert('Failed to check for card. Please try again later.');
+            return false;
+        }
+    };
+    
     const fetchLoans = async () => {
         try {
             const response = await axios.get(`http://localhost:4000/lendings/${user.email}`);
-            if (response.data) {}
-            const loanData = response.data.data;
-            const updatedLoans = loanData.map(loan => ({
+            const loanData = response.data.data.map(loan => ({
                 ...loan,
                 isReturned: false,
                 fee: calculateOverdueFee(loan.return_date, loan.is_overdue)
             }));
-            setLoans(updatedLoans);
+            setLoans(loanData);
         } catch (error) {
             console.error('Failed to fetch loans:', error);
             alert('Failed to load your loans. Please try again later.');
         }
     };
+    
 
     const handleReturn = async () => {
         if (!selectedLoanId) return;
@@ -61,11 +78,20 @@ export default function MyLoans({ user }) {
         }
     };
 
-    const handlePayFee = () => {
+    const handlePayFee = async () => {
         if (!selectedLoanId) return;
+    
+        const hasCard = await checkForCard();
+        if (!hasCard) {
+            alert('No registered payment method found. Please add a card first.');
+            return;
+        }
+    
         const updatedLoans = loans.map(loan => loan.lending_id === selectedLoanId ? { ...loan, fee: 0 } : loan);
         setLoans(updatedLoans);
+        alert('Fee paid successfully!');
     };
+    
 
     return (
         <div className="container-fluid mt-4">

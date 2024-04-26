@@ -701,20 +701,23 @@ app.post('/client/addCard', async (req, res) => {
 });
 
 app.get('/client/:email/cards', async (req, res) => {
-    const { email } = req.params;
-    try {
-        const query = `SELECT * FROM "CreditCards" WHERE client_email = $1;`;
-        const result = await pool.query(query, [email]);
-
-        if (result.rows.length > 0) {
-            res.json({ success: true, cards: result.rows });
-        } else {
-            res.status(404).json({ success: false, message: 'No cards found' });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Database error', error: error.message });
-    }
+  const { email } = req.params;
+  console.log("HELLO");
+  console.log(email);
+  try {
+      const query = `SELECT * FROM "CreditCards" WHERE client_email = $1;`;
+      const result = await pool.query(query, [email]);
+      if (result.rows.length > 0) {
+          res.json({ success: true, cards: result.rows });
+      } else {
+          res.status(404).json({ success: false, message: 'No cards found' });
+      }
+  } catch (error) {
+      console.error('Database error:', error);
+      res.status(500).json({ success: false, message: 'Database error', error: error.message });
+  }
 });
+
 
 app.delete('/client/:email/cards/:cardNumber', async (req, res) => {
     const { email, cardNumber } = req.params;
@@ -732,25 +735,50 @@ app.delete('/client/:email/cards/:cardNumber', async (req, res) => {
 });
 
 app.put('/client/:email/cards/:oldCardNumber', async (req, res) => {
-    const { email, oldCardNumber } = req.params;
-    const { newCardNumber } = req.body;
-    if (!newCardNumber) {
-        res.status(400).json({ success: false, message: "New card number must be provided" });
-        return;
-    }
-    try {
-        const updateQuery = `UPDATE "CreditCards" SET card_number = $1 WHERE client_email = $2 AND card_number = $3 RETURNING *;`;
-        const result = await pool.query(updateQuery, [newCardNumber, email, oldCardNumber]);
+  const { email, oldCardNumber } = req.params;
+  const { newCardNumber } = req.body;
+  console.log(email);
+  console.log(newCardNumber);
+  console.log(selectedCard.card_number);
+  if (!newCardNumber) {
+      return res.status(400).json({ success: false, message: "New card number must be provided" });
+  }
 
-        if (result.rows.length > 0) {
-            res.json({ success: true, card: result.rows[0], message: 'Card updated successfully' });
-        } else {
-            res.status(404).json({ success: false, message: 'Card not found or could not be updated' });
-        }
+  try {
+      const updateQuery = `
+          UPDATE "CreditCards" 
+          SET card_number = $3 
+          WHERE client_email = $2 AND card_number = $1 
+          RETURNING *;
+      `;
+      const result = await pool.query(updateQuery, [newCardNumber, email, oldCardNumber]);
+      if (result.rows.length > 0) {
+          res.json({ success: true, card: result.rows[0], message: 'Card updated successfully' });
+      } else {
+          res.status(404).json({ success: false, message: 'Card not found or could not be updated' });
+      }
+  } catch (error) {
+      console.error('Database error:', error);
+      res.status(500).json({ success: false, message: 'Database error', error: error.message });
+  }
+});
+
+
+app.get('/client/:email/hasCard', async (req, res) => {
+
+  const { email } = req.params;
+    try {
+        const query = `SELECT EXISTS(SELECT 1 FROM "CreditCards" WHERE client_email = $1)`;
+        const result = await pool.query(query, [email]);
+        const hasCard = result.rows[0].exists; // This will be true or false
+        res.json({ success: true, hasCard: hasCard });
     } catch (error) {
+        console.error("Database error:", error);
         res.status(500).json({ success: false, message: 'Database error', error: error.message });
     }
 });
+
+
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

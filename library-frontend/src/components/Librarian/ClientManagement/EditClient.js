@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ClientCreditCardManagement from './ClientCreditCardManagement';
 import axios from 'axios';
 
 function EditClient() {

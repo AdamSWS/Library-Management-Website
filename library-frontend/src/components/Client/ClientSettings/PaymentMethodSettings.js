@@ -4,11 +4,26 @@ import axios from 'axios';
 function PaymentMethodSettings({ email }) {
     const [cardNumber, setCardNumber] = useState('');
     const [cards, setCards] = useState([]);
-    const [selectedCard, setSelectedCard] = useState(null); // State to hold the selected card
-    const [newCardNumber, setNewCardNumber] = useState(''); // State for updated card number
+    const [selectedCard, setSelectedCard] = useState(null);
+    const [newCardNumber, setNewCardNumber] = useState('');
 
     useEffect(() => {
-        fetchCards();
+        const checkAndFetchCards = async () => {
+            try {
+                const hasCardsResponse = await axios.get(`http://localhost:4000/client/${email}/hasCard`);
+                console.log(hasCardsResponse);
+                if (hasCardsResponse.data.hasCard) {
+                    fetchCards();
+                } else {
+                    console.log('No cards to fetch');
+                }
+            } catch (error) {
+                console.error('Failed to check for cards:', error);
+                alert('Failed to check payment methods availability. Please try again.');
+            }
+        };
+
+        checkAndFetchCards();
     }, [email]);
 
     const fetchCards = async () => {
@@ -18,12 +33,15 @@ function PaymentMethodSettings({ email }) {
                 setCards(response.data.cards);
             } else {
                 console.log('No cards found');
+                setCards([]); // Clear previous cards if no new ones are found
             }
         } catch (error) {
             console.error('Failed to fetch cards:', error);
             alert('Failed to load payment methods. Please try again.');
+            setCards([]); // Clear cards on error to avoid displaying stale data
         }
     };
+    
 
     const handleAdd = async () => {
         if (!cardNumber) {
@@ -62,29 +80,29 @@ function PaymentMethodSettings({ email }) {
         }
     };
 
-    const handleUpdate = async () => {
-        if (!newCardNumber) {
-            alert('Please enter the new card number');
-            return;
+const handleUpdate = async () => {
+    if (!newCardNumber) {
+        alert('Please enter the new card number');
+        return;
+    }
+    try {
+        const response = await axios.put(`http://localhost:4000/client/${email}/cards/${selectedCard.card_number}`, {
+            newCardNumber
+        });
+        if (response.data.success) {
+            const updatedCards = cards.map(card => card.card_number === selectedCard.card_number ? { ...card, card_number: newCardNumber } : card);
+            setCards(updatedCards);
+            setNewCardNumber('');
+            setSelectedCard(null);
+        } else {
+            alert('Failed to update card: ' + response.data.message);
         }
-        try {
-            const response = await axios.put(`http://localhost:4000/client/updateCard/${selectedCard.card_number}`, {
-                newCardNumber,
-                clientEmail: email
-            });
-            if (response.data.success) {
-                const updatedCards = cards.map(card => card.card_number === selectedCard.card_number ? { ...card, card_number: newCardNumber } : card);
-                setCards(updatedCards);
-                setNewCardNumber('');
-                setSelectedCard(null);
-            } else {
-                alert('Failed to update card: ' + response.data.message);
-            }
-        } catch (error) {
-            console.error('Error updating card:', error);
-            alert('Failed to update card. Please try again. ' + error.message);
-        }
-    };
+    } catch (error) {
+        console.error('Error updating card:', error);
+        alert('Failed to update card. Please try again. ' + error.message);
+    }
+};
+
 
     const selectCard = (card) => {
         setSelectedCard(card);
