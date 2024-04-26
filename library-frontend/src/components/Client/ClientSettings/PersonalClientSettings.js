@@ -1,16 +1,33 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
-function PersonalClientSettings({ settings, onSave }) {
-    const [formData, setFormData] = useState(settings);
+function PersonalClientSettings({ user, onSave }) {
+    const [formData, setFormData] = useState(user);
 
     const handleChange = (event) => {
         const { name, value } = event.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        onSave(formData);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const updateData = {
+                currentEmail: user.email,
+                newEmail: formData.newEmail,
+                name: formData.name,
+            };
+
+            const response = await axios.post('http://localhost:4000/update/client', updateData);
+            if (response.data.success) {
+                alert('Client updated successfully');
+            } else {
+                alert('Failed to update client');
+            }
+        } catch (error) {
+            console.error('Error updating client:', error);
+            alert('Failed to update client: ' + (error.response ? error.response.data.message : error.message));
+        }
     };
 
     return (

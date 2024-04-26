@@ -1,22 +1,19 @@
 import React, { useState } from 'react';
-import SearchDocuments from './SearchDocuments';
+import SearchDocuments from './SearchDocument/SearchDocuments';
 import MyLoans from './MyLoans';
-import OverdueFees from './OverdueFees';
 import ClientSettings from './ClientSettings/ClientSettings';
 
-export default function ClientDashboard() {
+export default function ClientDashboard({ user }) {
     const [activeTab, setActiveTab] = useState('search');
 
     const getComponent = () => {
         switch (activeTab) {
             case 'search':
-                return <SearchDocuments />;
+                return <SearchDocuments user={ user } />;
             case 'loans':
-                return <MyLoans />;
-            case 'overdue':
-                return <OverdueFees />;
+                return <MyLoans user={ user } />;
             case 'settings':
-                return <ClientSettings />;
+                return <ClientSettings user={ user } />;
             default:
                 return <div>Select a tab</div>;
         }
@@ -30,7 +27,6 @@ export default function ClientDashboard() {
             <div className="flex justify-center space-x-4 mb-4 bg-gray-100 py-2 px-4 rounded-lg shadow-inner">
                 <button onClick={() => setActiveTab('search')} className={`flex-1 py-2 rounded ${activeTab === 'search' ? 'bg-blue-500 text-white' : 'text-blue-500 bg-transparent'}`}>Search Documents</button>
                 <button onClick={() => setActiveTab('loans')} className={`flex-1 py-2 rounded ${activeTab === 'loans' ? 'bg-blue-500 text-white' : 'text-blue-500 bg-transparent'}`}>My Loans</button>
-                <button onClick={() => setActiveTab('overdue')} className={`flex-1 py-2 rounded ${activeTab === 'overdue' ? 'bg-blue-500 text-white' : 'text-blue-500 bg-transparent'}`}>Overdue Fees</button>
                 <button onClick={() => setActiveTab('settings')} className={`flex-1 py-2 rounded ${activeTab === 'settings' ? 'bg-blue-500 text-white' : 'text-blue-500 bg-transparent'}`}>Settings</button>
             </div>
             <div className="flex justify-center">

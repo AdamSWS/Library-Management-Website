@@ -1,49 +1,66 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-function LoanReports({ loans }) {
+function formatDate(dateString) {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-US', options);
+}
+
+export default function LoanReports() {
+    const [loans, setLoans] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        fetchLoans();
+    }, []);
+
+    const fetchLoans = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await axios.get('http://localhost:4000/lendings/active-loans');  // Adjust endpoint as necessary
+            setLoans(response.data.data.map(loan => ({
+                ...loan,
+                dueDate: formatDate(loan.return_date)  // Formatting due date for display
+            })));
+        } catch (error) {
+            setError('Failed to load loans');
+            console.error('Failed to fetch loans:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <div className="container mx-auto mt-4">
-            <div className="bg-white p-4 rounded-lg shadow-lg">
-                <h2 className="text-xl font-semibold mb-3">Loan Reports</h2>
-                <table className="min-w-full leading-normal">
-                    <thead>
-                        <tr>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Document Title
-                            </th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Client Name
-                            </th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Due Date
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loans.map(loan => (
-                            <tr key={loan.id}>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <div className="flex items-center">
-                                        <div className="ml-3">
-                                            <p className="text-gray-900 whitespace-no-wrap">
-                                                {loan.documentTitle}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p className="text-gray-900 whitespace-no-wrap">{loan.clientName}</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p className="text-gray-900 whitespace-no-wrap">{loan.dueDate}</p>
-                                </td>
+        <div className="container-fluid mt-4">
+            <div className="card shadow-lg h-100">
+                <div className="card-header">
+                    <h2 className="h4 font-weight-bold">Loan Reports</h2>
+                </div>
+                <div className="card-body">
+                    {loading && <p>Loading...</p>}
+                    {error && <p className="text-danger">{error}</p>}
+                    <table className="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Document Title</th>
+                                <th>Client Email</th>
+                                <th>Due Date</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {loans.map(loan => (
+                                <tr key={loan.lending_id}>
+                                    <td>{loan.title}</td>
+                                    <td>{loan.client_email}</td>
+                                    <td>{loan.dueDate}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
 }
-
-export default LoanReports;

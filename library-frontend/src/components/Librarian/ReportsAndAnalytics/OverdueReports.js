@@ -1,51 +1,71 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-function OverdueReports({ overdues }) {
+function formatDate(dateString) {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-US', options);
+}
+
+export default function OverdueLoanReports() {
+    const [loans, setLoans] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        fetchLoans();
+    }, []);
+
+    const fetchLoans = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await axios.get('http://localhost:4000/lendings/active-loans');
+            const today = new Date();
+            const filteredLoans = response.data.data.filter(loan => new Date(loan.return_date) < today).map(loan => ({
+                ...loan,
+                dueDate: formatDate(loan.return_date),
+                daysOverdue: Math.floor((today - new Date(loan.return_date)) / (1000 * 3600 * 24))
+            }));
+            setLoans(filteredLoans);
+        } catch (error) {
+            setError('Failed to load overdue loans');
+            console.error('Failed to fetch loans:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <div className="container mx-auto mt-4">
-            <div className="bg-white p-4 rounded-lg shadow-lg">
-                <h2 className="text-xl font-semibold mb-3">Overdue Reports</h2>
-                <table className="min-w-full leading-normal">
-                    <thead>
-                        <tr>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Document Title
-                            </th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Client Name
-                            </th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Days Overdue
-                            </th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Overdue Fee ($)
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {overdues.map(item => (
-                            <tr key={item.id}>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p className="text-gray-900 whitespace-no-wrap">
-                                        {item.documentTitle}
-                                    </p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p className="text-gray-900 whitespace-no-wrap">{item.clientName}</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p className="text-gray-900 whitespace-no-wrap">{item.daysOverdue} days</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p className="text-gray-900 whitespace-no-wrap">${item.fee}</p>
-                                </td>
+        <div className="container-fluid mt-4">
+            <div className="card shadow-lg h-100">
+                <div className="card-header">
+                    <h2 className="h4 font-weight-bold">Overdue Loan Reports</h2>
+                </div>
+                <div className="card-body">
+                    {loading && <p>Loading...</p>}
+                    {error && <p className="text-danger">{error}</p>}
+                    <table className="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Document Title</th>
+                                <th>Client Email</th>
+                                <th>Due Date</th>
+                                <th>Days Overdue</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {loans.map(loan => (
+                                <tr key={loan.lending_id}>
+                                    <td>{loan.title}</td>
+                                    <td>{loan.client_email}</td>
+                                    <td>{loan.dueDate}</td>
+                                    <td>{loan.daysOverdue}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
 }
-
-export default OverdueReports;
