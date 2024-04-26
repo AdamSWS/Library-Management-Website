@@ -14,11 +14,17 @@ export default function ClientSettings() {
         { id: 2, cardNumber: '**** **** **** 5678', expiry: '10/25' }
     ]);
 
+    const [preferredPaymentMethod, setPreferredPaymentMethod] = useState(null);
+
+    const handleUpdatePaymentMethods = (updatedMethods) => {
+        setPaymentMethods(updatedMethods);
+    };
+
     return (
         <div className="container mx-auto mt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <PersonalClientSettings settings={clientInfo} onSave={setClientInfo} />
-                <PaymentMethodSettings methods={paymentMethods} onUpdate={setPaymentMethods} />
+                <PaymentMethodSettings methods={paymentMethods} onUpdate={setPaymentMethods} preferredPaymentMethod={preferredPaymentMethod} setPreferredPaymentMethod={setPreferredPaymentMethod} />
             </div>
         </div>
     );
