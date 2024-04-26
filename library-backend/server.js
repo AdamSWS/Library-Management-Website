@@ -404,8 +404,8 @@ app.post('/search/documents', async (req, res) => {
     // isbn is a number
     // author is a string
     // title is a string
-    
-    switch (type){
+
+    switch (type) {
         case 'All':
             try {
                 // search for documents with title, author or ISBN matching the query
@@ -431,7 +431,7 @@ app.post('/search/documents', async (req, res) => {
                 res.status(200).json({ success: true, data: searchResult.rows });
             } catch (error) {
                 console.error("Error searching documents:", error);
-                res.status(500).json({ success: false, message: "Server error",data:[]  });
+                res.status(500).json({ success: false, message: "Server error", data: [] });
             }
             break;
         case 'Book':
@@ -457,7 +457,7 @@ app.post('/search/documents', async (req, res) => {
                 res.status(200).json({ success: true, data: searchResult.rows });
             } catch (error) {
                 console.error("Error searching books:", error);
-                res.status(500).json({ success: false, message: "Server error",data:[] });
+                res.status(500).json({ success: false, message: "Server error", data: [] });
             }
             break;
         case 'Magazine':
@@ -466,7 +466,7 @@ app.post('/search/documents', async (req, res) => {
             // get isbns from magazines
             // get authors from documentauthor and authors
             // combine results
-            try{
+            try {
                 const searchQuery = `
                 SELECT d.title,
                     m.isbn,
@@ -481,11 +481,11 @@ app.post('/search/documents', async (req, res) => {
                 ORDER BY d.title`;
                 const searchResult = await pool.query(searchQuery, [`%${query}%`]);
                 res.status(200).json({ success: true, data: searchResult.rows });
-            } catch (error){
+            } catch (error) {
                 console.error("Error searching magazines:", error);
-                res.status(500).json({ success: false, message: "Server error",data:[] });
+                res.status(500).json({ success: false, message: "Server error", data: [] });
             }
-            
+
             break;
         case 'Journal Article':
             // search for journal articles with title, author or ISBN matching the query
@@ -509,11 +509,167 @@ app.post('/search/documents', async (req, res) => {
                 res.status(200).json({ success: true, data: searchResult.rows });
             } catch (error) {
                 console.error("Error searching journal articles:", error);
-                res.status(500).json({ success: false, message: "Server error",data:[] });
+                res.status(500).json({ success: false, message: "Server error", data: [] });
             }
             break;
         default:
-            res.status(400).json({ success: false, message: "Invalid document type" ,data:[] });
+            res.status(400).json({ success: false, message: "Invalid document type", data: [] });
+    }
+});
+
+
+app.post('/client/addaddress', async (req, res) => {
+    const { email, address } = req.body;
+    if (!email || !address) {
+        return res.status(400).json({ success: false, message: "Email and address are required" });
+    }
+    try {
+        const email = String(req.body.email);  // Convert to string to avoid type issues
+        const address = String(req.body.address);
+        console.log('Email:', email, 'Address:', address);  // Log types and values
+
+        await pool.query('BEGIN');
+
+        try {
+            const insertQuery = `
+            INSERT INTO public."Addresses" (email, address)
+            SELECT $1::text, $2::text
+            WHERE NOT EXISTS (
+                SELECT 1 FROM public."Addresses" WHERE email = $1::text AND address = $2::text
+            )
+            RETURNING address, address_id as id;`;
+
+            const addressResult = await pool.query(insertQuery, [email, address]);
+
+            if (addressResult.rows.length > 0) {
+                await pool.query('COMMIT');
+                res.json({ success: true, data: addressResult.rows }); // Return the added address
+            } else {
+                await pool.query('ROLLBACK');
+                res.json({ success: false, message: 'Address already exists for this email' });
+            }
+        } catch (error) {
+            await pool.query('ROLLBACK');
+            res.status(500).json({ success: false, message: 'Failed to add address', error: error.message });
+        }
+
+    } catch (error) {
+        // If there is an error, rollback the transaction
+        await pool.query('ROLLBACK');
+        res.status(500).json({ success: false, message: 'Failed to add address', error: error.message });
+    }
+
+});
+
+
+app.get('/client/addresses/:email', async (req, res) => {
+    const { email } = req.params;
+    try {
+        const query = `
+        SELECT address, address_id as id
+        FROM public."Addresses"
+        WHERE email = $1
+        ORDER BY address_id`;
+        const result = await pool.query(query, [email]);
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+
+app.post('/client/deleteaddress', async (req, res) => {
+    const { email, address } = req.body;
+
+    if (!email || !address) {
+        return res.status(400).json({ success: false, message: "Email and address are required" });
+    }
+    try {
+        await pool.query('BEGIN');
+        const deleteQuery = 'DELETE FROM public."Addresses" WHERE email = $1 AND address = $2';
+        await pool.query(deleteQuery, [email, address]);
+        await pool.query('COMMIT');
+        res.json({ success: true, message: "Address deleted successfully" });
+    } catch (error) {
+        await pool.query('ROLLBACK');
+        console.error("Error deleting address:", error);
+        res.status(500).json({ success: false, message: "Failed to delete address" });
+    }
+});
+
+
+
+app.post('/client/addPayment', async (req, res) => {
+    const { cardNumber, email, address_id } = req.body;
+    console.log('Card Number:', cardNumber, 'Email:', email, 'Address ID:', address_id);
+    if (!cardNumber || !email || !address_id) {
+        return res.status(400).json({ success: false, message: "Card number, email and address ID are required" });
+    }
+    try {
+        // Check if the address, and email match and exists else return error
+        //if address and email match then add the payment method to CreditCard table
+        const insertQuery = `
+            WITH valid_address AS (
+                SELECT address_id, address, email  -- Include address and email in the selection
+                FROM public."Addresses"
+                WHERE address_id = $3 AND email = $2
+            )
+            INSERT INTO public."CreditCards" (card_number, address_id)
+            SELECT $1::text, address_id::integer
+            FROM valid_address
+            RETURNING 
+                card_number as cardnumber, 
+                address_id as id, 
+                (SELECT address FROM valid_address) as address;
+        `;
+        const result = await pool.query(insertQuery, [cardNumber, email, address_id]);
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.error("Error adding payment method:", error);
+        res.status(500).json({ success: false, message: "Failed to add payment method" });
+    }
+});
+
+
+app.post('/client/deletePayment', async (req, res) => {
+    const { cardNumber, email } = req.body;
+
+    if (!cardNumber || !email) {
+        return res.status(400).json({ success: false, message: "Card number and email are required" });
+    }
+    try {
+        await pool.query('BEGIN');
+        const deleteQuery = `
+            DELETE FROM public."CreditCards"
+            WHERE card_number = $1 AND address_id IN (
+                SELECT address_id FROM public."Addresses" WHERE email = $2
+            )`;
+        await pool.query(deleteQuery, [cardNumber, email]);
+        await pool.query('COMMIT');
+        res.json({ success: true, message: "Payment method deleted successfully" });
+    } catch (error) {
+        await pool.query('ROLLBACK');
+        console.error("Error deleting payment method:", error);
+        res.status(500).json({ success: false, message: "Failed to delete payment method" });
+    }
+});
+
+
+app.get('/client/payments/:email', async (req, res) => {
+    const { email } = req.params;
+    try {
+        const query = `
+        SELECT c.card_number as cardNumber, a.address, a.address_id as id
+        FROM public."CreditCards" c
+        JOIN public."Addresses" a ON c.address_id = a.address_id
+        WHERE a.email = $1
+        ORDER BY a.address_id`;
+        const result = await pool.query(query, [email]);
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server error" });
     }
 });
 
