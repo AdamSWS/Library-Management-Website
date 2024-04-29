@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import Button from 'react-bootstrap/Button';
-import DocumentRow from './DocumentRow'; // Ensure the import path is correct
+import DocumentRow from './DocumentRow';
 
 export default function SearchDocuments() {
     const [searchParams, setSearchParams] = useState({ query: '', type: 'All' });

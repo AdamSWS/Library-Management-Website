@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+// componet that displays client settings
 function PersonalClientSettings({ user, onSave }) {
     const [formData, setFormData] = useState(user);
 
+    // hanldes changes to personal information
     const handleChange = (event) => {
         const { name, value } = event.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    // handles submission of personal infomation to database
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
 import PersonalClientSettings from './PersonalClientSettings';
 import PaymentMethodSettings from './PaymentMethodSettings';
 
+// component to controll settings displays
 export default function ClientSettings({ user }) {
 
     return (

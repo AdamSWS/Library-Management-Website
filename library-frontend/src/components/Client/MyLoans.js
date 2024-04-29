@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+// date formatting for database
 function formatDate(dateString) {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
 }
 
+// calculation of overdue fees logic
 function calculateOverdueFee(returnDate, isOverdue) {
     const today = new Date();
     const dueDate = new Date(returnDate);
@@ -17,7 +19,7 @@ function calculateOverdueFee(returnDate, isOverdue) {
     return 5 + 5 * diffWeeks; // Base fee + incremental fee per overdue week
 }
 
-
+// 
 export default function MyLoans({ user }) {
     const [loans, setLoans] = useState([]);
     const [selectedLoanId, setSelectedLoanId] = useState(null);

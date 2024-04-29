@@ -3,9 +3,11 @@ import SearchDocuments from './SearchDocument/SearchDocuments';
 import MyLoans from './MyLoans';
 import ClientSettings from './ClientSettings/ClientSettings';
 
+// dashboard to display all client functions
 export default function ClientDashboard({ user }) {
     const [activeTab, setActiveTab] = useState('search');
 
+    // switch statement to display active tab
     const getComponent = () => {
         switch (activeTab) {
             case 'search':

@@ -1,37 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Button from 'react-bootstrap/Button';
-import DocumentRow from './DocumentRow'; // Ensure the import path is correct
+import DocumentRow from './DocumentRow';
 
+// formats dates to be added to database
 function formatDate(date) {
     if (!(date instanceof Date)) {
-        date = new Date(); // Use current date if input is invalid
+        date = new Date();
     }
 
     const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Add leading zero
-    const day = date.getDate().toString().padStart(2, '0'); // Add leading zero
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
 }
 
+// find number of weeks in a time period
 function addWeeksToDate(date, weeks) {
     date.setDate(date.getDate() + weeks * 7);
     return date;
 }
 
+// componet to display search documents dashboard
 export default function SearchDocuments({ user }) {
     const [searchParams, setSearchParams] = useState({ query: '', type: 'All'});
     const [results, setResults] = useState([]);
     const [selectedDocumentId, setSelectedDocumentId] = useState(null);
     const [lendDate, setLendDate] = useState(formatDate(new Date()));
-    const [returnDate, setReturnDate] = useState(formatDate(addWeeksToDate(new Date(), 4))); // Set return date to 4 weeks from today
+    const [returnDate, setReturnDate] = useState(formatDate(addWeeksToDate(new Date(), 4)));
     const [loading, setLoading] = useState(false);
 
+    // handler for search button to look up documents in database
     const handleSearch = async () => {
         setLoading(true);
         try {
             const response = await axios.post('http://localhost:4000/search/documents', searchParams);
-            setResults(response.data.data);
+            const documents = response.data.data;
+
+            if (documents.length > 0) {
+                const documentIds = documents.map(doc => doc.document_id);
+                const copiesResponse = await axios.post('http://localhost:4000/document/copies', { documentIds });
+                const copiesCount = copiesResponse.data.data;
+
+                const resultsWithCopies = documents.map(doc => ({
+                    ...doc,
+                    copies: copiesCount.find(c => c.document_id === doc.document_id)?.copy_count || 0
+                }));
+
+                setResults(resultsWithCopies);
+            } else {
+                setResults([]);
+            }
         } catch (error) {
             console.error('Error searching documents:', error);
             alert('Failed to fetch documents. Please try again.');
@@ -39,10 +58,12 @@ export default function SearchDocuments({ user }) {
         setLoading(false);
     };
 
+    // handles changes in text forms from user
     const handleInputChange = (e) => {
         setSearchParams({ ...searchParams, [e.target.name]: e.target.value });
     };
 
+    // handles the date change in the calander component
     const handleDateChange = (date) => {
         const lendDate = formatDate(date);
         const returnDate = formatDate(addWeeksToDate(new Date(date), 4));
@@ -50,10 +71,12 @@ export default function SearchDocuments({ user }) {
         setReturnDate(returnDate);
     };
 
+    // handles user row clicks to select a doc
     const handleRowClick = (document) => {
         setSelectedDocumentId(document);
     };
 
+    // handles clicks to the lend button to add a Lending to the database
     const handleLendCopy = async () => {
         if (selectedDocumentId && user && lendDate && returnDate) {
             setLoading(true);
@@ -78,6 +101,7 @@ export default function SearchDocuments({ user }) {
         }
     };
 
+    // select doc logic
     const selectedDocument = results.find(doc => doc === selectedDocumentId);
 
     return (

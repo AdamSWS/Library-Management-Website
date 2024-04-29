@@ -1,5 +1,6 @@
 import React from 'react';
 
+// componet to store document infomation in Search Documents Table
 function DocumentRow({ document, isSelected, onSelect }) {
     const handleClick = () => {
         onSelect(document);
