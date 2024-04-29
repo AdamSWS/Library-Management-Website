@@ -92,12 +92,12 @@ export default function SearchDocuments() {
                                 <input type="text" id="query" name="query" value={searchParams.query} onChange={handleInputChange} className="form-control" placeholder="Enter title, author, or ISBN" />
                             </div>
                             <div className="mb-3">
-                                <label htmlFor="type" className="form-label">Document Type</label>
+                                <label htmlFor="type" className="form-label">Search Type</label>
                                 <select id="type" name="type" value={searchParams.type} onChange={handleInputChange} className="form-control">
                                     <option value="All">All</option>
-                                    <option value="Book">Book</option>
-                                    <option value="Magazine">Magazine</option>
-                                    <option value="Journal Article">Journal Article</option>
+                                    <option value="Title">Title</option>
+                                    <option value="Author">Author</option>
+                                    <option value="ISBN">ISBN</option>
                                 </select>
                             </div>
                             <button onClick={handleSearch} className="btn btn-primary">Search</button>
