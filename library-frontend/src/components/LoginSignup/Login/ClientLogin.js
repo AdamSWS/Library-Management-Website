@@ -10,6 +10,9 @@ export default function ClientLogin({ onLogin }) {
     const handleSubmit = async (event) => {
         event.preventDefault();
         try {
+            // Send a POST request to the server
+            // to login the client with the given email and name
+            // The server should respond with a success message and the user details
             const response = await axios.post('http://localhost:4000/login/client', { email, name });
             if (response.data.success) {
                 onLogin({ role: 'client', email, ...response.data.user });

@@ -13,6 +13,9 @@ function InventoryReports() {
     const fetchInventory = async () => {
         setLoading(true);
         try {
+            // Send a GET request to the server
+            // to fetch the inventory data
+            // The server should respond with the inventory details
             const response = await axios.get('http://localhost:4000/inventory');
             setInventory(response.data.data);
             setLoading(false);

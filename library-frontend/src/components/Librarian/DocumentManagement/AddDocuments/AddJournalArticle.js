@@ -21,6 +21,9 @@ export default function AddJournalArticle() {
         e.preventDefault();
         console.log('Journal Article Data:', journalData);
         try {
+            // Send a POST request to the server
+            // to add a new journal article to the database
+            // The server should respond with a success message
             const response = await axios.post('http://localhost:4000/addjournalarticle', journalData);
             alert('Journal Article added successfully');
             console.log('Server Response:', response.data);

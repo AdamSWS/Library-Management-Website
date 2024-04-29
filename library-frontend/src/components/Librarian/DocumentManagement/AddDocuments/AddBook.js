@@ -20,6 +20,8 @@ export default function AddBook() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // Send a POST request to the server
+            // to add a new book to the database
             const response = await axios.post('http://localhost:4000/addbook', bookData);
             if (response.data.success) {
                 alert('Book added successfully');

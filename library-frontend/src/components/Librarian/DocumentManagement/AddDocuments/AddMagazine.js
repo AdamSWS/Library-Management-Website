@@ -18,6 +18,9 @@ export default function AddMagazine() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // Send a POST request to the server
+            // to add a new magazine to the database
+            // The server should respond with a success message
             const response = await axios.post('http://localhost:4000/addmagazine', magazineData);
             console.log('Magazine added successfully:', response.data);
             alert('Magazine added successfully!');

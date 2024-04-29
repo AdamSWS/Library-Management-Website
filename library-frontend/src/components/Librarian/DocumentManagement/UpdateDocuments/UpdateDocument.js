@@ -29,6 +29,9 @@ export default function UpdateDocument() {
             return;
         }
         try {
+            // Send a GET request to the server
+            // to fetch the document with the given ID
+            // The server should respond with the document details
             const response = await axios.get(`http://localhost:4000/document/${documentData.id}`);
             if (response.data.success) {
                 const { data } = response.data;
@@ -82,6 +85,10 @@ export default function UpdateDocument() {
         }
     
         try {
+            // Send a POST request to the server
+            // to update the document with the given ID
+            // The server should respond with a success message
+            
             const response = await axios.post('http://localhost:4000/update/document', updateData);
             if (response.data.success) {
                 alert('Document updated successfully');

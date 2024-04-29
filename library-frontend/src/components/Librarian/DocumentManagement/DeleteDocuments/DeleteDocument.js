@@ -15,6 +15,9 @@ export default function DeleteDocument() {
             return;
         }
         try {
+            // Send a DELETE request to the server
+            // to delete the document with the given ID
+            // The server should respond with a success message
             const response = await axios.delete(`http://localhost:4000/delete/document/${documentId}`);
             if (response.data.success) {
                 alert('Document deleted successfully');

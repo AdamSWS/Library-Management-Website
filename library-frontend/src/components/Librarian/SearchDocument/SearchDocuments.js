@@ -14,11 +14,19 @@ export default function SearchDocuments() {
     const handleSearch = async () => {
         setLoading(true);
         try {
+            // Send a POST request to the server
+            // to search for documents based on the search parameters
+            // The server should respond with the search results
+
             const response = await axios.post('http://localhost:4000/search/documents', searchParams);
             const documents = response.data.data;
 
             if (documents.length > 0) {
                 const documentIds = documents.map(doc => doc.document_id);
+                // Send a POST request to the server
+                // to get the number of copies for each document
+                // The server should respond with the number of copies for each document
+
                 const copiesResponse = await axios.post('http://localhost:4000/document/copies', { documentIds });
                 const copiesCount = copiesResponse.data.data;
 
@@ -56,6 +64,10 @@ export default function SearchDocuments() {
             setLoading(true);
             console.log(selectedDocumentId.document_id);
             try {
+                // Send a POST request to the server
+                // to add copies of the selected document
+                // The server should respond with a success message
+                
                 const response = await axios.post('http://localhost:4000/create/copy', {
                     document_id: selectedDocumentId.document_id,
                     numCopies: numCopiesToAdd

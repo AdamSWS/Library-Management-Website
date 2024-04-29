@@ -14,6 +14,9 @@ function App() {
         if (user && user.email && user.role) {
             const fetchUserData = async () => {
                 try {
+                    // Send a GET request to the server
+                    // to fetch the user data based on the role
+                    // The server should respond with the user details
                     const endpoint = user.role === 'librarian' ? `/librarian/${user.email}` : `/client/${user.email}`;
                     const response = await axios.get(`http://localhost:4000${endpoint}`);
                     setUser({...user, ...response.data.data});

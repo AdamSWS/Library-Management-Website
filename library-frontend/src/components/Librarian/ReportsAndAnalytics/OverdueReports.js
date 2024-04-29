@@ -19,6 +19,10 @@ export default function OverdueLoanReports() {
         setLoading(true);
         setError(null);
         try {
+            // Send a GET request to the server
+            // to fetch active loans
+            // The server should respond with the active loans
+            // Filter the loans to show only the overdue ones
             const response = await axios.get('http://localhost:4000/lendings/active-loans');
             const today = new Date();
             const filteredLoans = response.data.data.filter(loan => new Date(loan.return_date) < today).map(loan => ({

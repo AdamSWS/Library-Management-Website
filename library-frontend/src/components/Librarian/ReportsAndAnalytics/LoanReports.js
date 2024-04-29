@@ -19,6 +19,9 @@ export default function LoanReports() {
         setLoading(true);
         setError(null);
         try {
+            // Send a GET request to the server
+            // to fetch active loans
+            // The server should respond with the active loans
             const response = await axios.get('http://localhost:4000/lendings/active-loans');  // Adjust endpoint as necessary
             setLoans(response.data.data.map(loan => ({
                 ...loan,

@@ -10,6 +10,10 @@ export default function LibrarianLogin({ onLogin }) {
     const handleSubmit = async (event) => {
         event.preventDefault();
         try {
+            // Send a POST request to the server
+            // to login the librarian with the given email and SSN
+            // The server should respond with a success message and the user details
+            
             const response = await axios.post('http://localhost:4000/login/librarian', { email, ssn });
             if (response.data.success) {
                 onLogin({ role: 'librarian', email, ssn, ...response.data.user });
