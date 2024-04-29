@@ -1,42 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-function InventoryReports({ inventory }) {
+function InventoryReports() {
+    const [inventory, setInventory] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        fetchInventory();
+    }, []);
+
+    const fetchInventory = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get('http://localhost:4000/inventory');
+            setInventory(response.data.data);
+            setLoading(false);
+        } catch (error) {
+            console.error('Failed to fetch inventory:', error);
+            setError('Failed to load inventory');
+            setLoading(false);
+        }
+    };
+
     return (
-        <div className="container mx-auto mt-4">
-            <div className="bg-white p-4 rounded-lg shadow-lg">
-                <h2 className="text-xl font-semibold mb-3">Inventory Reports</h2>
-                <table className="min-w-full leading-normal">
-                    <thead>
-                        <tr>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Document Title
-                            </th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Copies Available
-                            </th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Copies Loaned
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {inventory.map(doc => (
-                            <tr key={doc.id}>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p className="text-gray-900 whitespace-no-wrap">
-                                        {doc.documentTitle}
-                                    </p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p className="text-gray-900 whitespace-no-wrap">{doc.copiesAvailable}</p>
-                                </td>
-                                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                    <p className="text-gray-900 whitespace-no-wrap">{doc.copiesLoaned}</p>
-                                </td>
+        <div className="container-fluid mt-4">
+            <div className="card shadow-lg h-100">
+                <div className="card-header">
+                    <h2 className="h4 font-weight-bold">Inventory Reports</h2>
+                </div>
+                <div className="card-body">
+                    {loading && <p>Loading...</p>}
+                    {error && <p className="text-danger">{error}</p>}
+                    <table className="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Document Title</th>
+                                <th>Copies Available</th>
+                                <th>Copies Loaned</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {inventory.map((item) => (
+                                <tr key={item.document_id}>
+                                    <td>{item.documentTitle}</td>
+                                    <td>{item.copiesAvailable}</td>
+                                    <td>{item.copiesLoaned}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
