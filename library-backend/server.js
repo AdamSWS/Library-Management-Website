@@ -8,7 +8,12 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+
 app.get("/librarian/:email", async (req, res) => {
+  //this function is used to get the librarian details by email
+  //it takes the email as a parameter and returns the librarian details
+  //if the librarian is not found, it returns a 404 status code
+  //if there is a server error, it returns a 500 status code
   const { email } = req.params;
   try {
     const query = 'SELECT * FROM "Librarians" WHERE email = $1';
@@ -24,6 +29,10 @@ app.get("/librarian/:email", async (req, res) => {
 });
 
 app.get("/client/:email", async (req, res) => {
+  //this function is used to get the client details by email
+  //it takes the email as a parameter and returns the client details
+  //if the client is not found, it returns a 404 status code
+  //if there is a server error, it returns a 500 status code
   const { email } = req.params;
   try {
     const query = 'SELECT * FROM "Clients" WHERE email = $1';
@@ -39,6 +48,10 @@ app.get("/client/:email", async (req, res) => {
 });
 
 app.post("/login/librarian", async (req, res) => {
+  //this function is used to login a librarian
+  //it takes the email and ssn as parameters
+  //it returns a success message if the login is successful
+  //it returns an error message if the login is unsuccessful
   const { email, ssn } = req.body;
   try {
     const query = 'SELECT * FROM "Librarians" WHERE email = $1 AND ssn = $2';
@@ -54,6 +67,10 @@ app.post("/login/librarian", async (req, res) => {
 });
 
 app.post("/login/client", async (req, res) => {
+  //this function is used to login a client
+  //it takes the email as a parameter
+  //it returns a success message if the login is successful
+  //it returns an error message if the login is unsuccessful
   const { email } = req.body;
   try {
     const query = 'SELECT * FROM "Clients" WHERE email = $1';
@@ -69,11 +86,18 @@ app.post("/login/client", async (req, res) => {
 });
 
 app.post("/signup/librarian", async (req, res) => {
+  //this function is used to register a librarian
+  //it takes the ssn, name, email and salary as parameters
+  //it returns a success message if the registration is successful
+  //it returns an error message if the registration is unsuccessful
   const { ssn, name, email, salary } = req.body;
   if (!(email && name && ssn && salary)) {
     return res.status(400).json({ success: false, message: "All fields are required" });
   }
   try {
+    //check if the librarian already exists
+    //if the librarian already exists, return an error message
+    //if the librarian does not exist, register the librarian
     const existsQuery =
       'SELECT * FROM "Librarians" WHERE email = $1 OR ssn = $2';
     const existsResult = await pool.query(existsQuery, [email, ssn]);
@@ -93,11 +117,20 @@ app.post("/signup/librarian", async (req, res) => {
 });
 
 app.post("/signup/client", async (req, res) => {
+  //this function is used to register a client
+  //it takes the email and name as parameters
+  //it returns a success message if the registration is successful
+  //it returns an error message if the registration is unsuccessful
+  //it returns a 400 status code if the email and name are not provided
+  //it returns a 409 status code if the client already exists
   const { email, name } = req.body;
   if (!(email && name)) {
     return res.status(400).json({ success: false, message: "Email and name are required" });
   }
   try {
+    //check if the client already exists
+    //if the client already exists, return an error message
+    //if the client does not exist, register the client
     const existsQuery = 'SELECT * FROM "Clients" WHERE email = $1';
     const existsResult = await pool.query(existsQuery, [email]);
     if (existsResult.rows.length > 0) {
@@ -116,8 +149,16 @@ app.post("/signup/client", async (req, res) => {
 });
 
 app.post("/addbook", async (req, res) => {
+  //this function is used to add a book
+  //it takes the title, authors, isbn, publisher, year, edition and pages as parameters
+  //it returns a success message if the book is added successfully
+  //it returns an error message if the book is not added successfully
+  //it returns a 500 status code if there is a server error
   const { title, authors, isbn, publisher, year, edition, pages } = req.body;
   try {
+    //add the book to the database
+    //if the book is added successfully, return a success message
+    //if the book is not added successfully, return an error message
     const documentId = await addDocumentAndAuthors(title, "paper", publisher, year, authors);
     const insertBookQuery = 'INSERT INTO public."Book" (document_id, isbn, edition, pages) VALUES ($1, $2, $3, $4)';
     await pool.query(insertBookQuery, [documentId, isbn, edition, pages]);
@@ -128,8 +169,15 @@ app.post("/addbook", async (req, res) => {
 });
 
 app.post("/addmagazine", async (req, res) => {
+  //this function is used to add a magazine
+  //it takes the title, authors, isbn, publisher, year and month as parameters
+  //it returns a success message if the magazine is added successfully
+  //it returns an error message if the magazine is not added successfully
   const { title, authors, isbn, publisher, year, month } = req.body;
   try {
+    //add the magazine to the database
+    //if the magazine is added successfully, return a success message
+    //if the magazine is not added successfully, return an error message
     const documentId = await addDocumentAndAuthors(title, "paper", publisher, year, null);
     const insertMagQuery = 'INSERT INTO public."Magazine" (document_id, isbn, month) VALUES ($1, $2, $3)';
     await pool.query(insertMagQuery, [documentId, isbn, month]);
@@ -141,8 +189,15 @@ app.post("/addmagazine", async (req, res) => {
 });
 
 app.post("/addjournalarticle", async (req, res) => {
+  //this function is used to add a journal article
+  //it takes the title, authors, journal_name, issue_number, article_number, year and publisher as parameters
+  //it returns a success message if the journal article is added successfully
+  //it returns an error message if the journal article is not added successfully
   const { title, authors, journal_name, issue_number, article_number, year, publisher } = req.body;
   try {
+    //add the journal article to the database
+    //if the journal article is added successfully, return a success message
+    //if the journal article is not added successfully, return an error message
     const documentId = await addDocumentAndAuthors(title, "electronic", publisher, year, authors);
     const insertJournalQuery = `INSERT INTO public."JournalArticle" (document_id, journal_name, issue_number, article_number) VALUES ($1, $2, $3, $4)`;
     await pool.query(insertJournalQuery, [documentId, journal_name, issue_number, article_number]);
@@ -153,7 +208,13 @@ app.post("/addjournalarticle", async (req, res) => {
 });
 
 async function addDocumentAndAuthors(title, documentType, publisher, year, authors) {
+  //this function is used to add a document and its authors
+  //it takes the title, document type, publisher, year and authors as parameters
+  //it returns the document id
   try {
+    //add the document to the database
+    //if the document is added successfully, return the document id
+    //if the document is not added successfully, throw an error
     const docInsertQuery = 'INSERT INTO public."Document" (title, document_type, publisher, year) VALUES ($1, $2, $3, $4) RETURNING document_id';
     const docValues = [title, documentType, publisher, year];
     const docResponse = await pool.query(docInsertQuery, docValues);
@@ -162,6 +223,9 @@ async function addDocumentAndAuthors(title, documentType, publisher, year, autho
       const authorsArray = authors.split(",").map((author) => author.trim()).filter((author) => author !== "");
       for (const authorName of authorsArray) {
         let authorId;
+        //check if the author already exists
+        //if the author already exists, get the author id
+        //if the author does not exist, add the author and get the author id
         const authorQuery = 'SELECT author_id FROM public."Author" WHERE name = $1';
         const authorRes = await pool.query(authorQuery, [authorName]);
         if (authorRes.rows.length === 0) {
@@ -182,13 +246,25 @@ async function addDocumentAndAuthors(title, documentType, publisher, year, autho
 }
 
 app.get("/document/:id", async (req, res) => {
+  //this function is used to get the document details by id
+  //it takes the id as a parameter and returns the document details
+  //if the document is not found, it returns a 404 status code
+  //if there is a server error, it returns a 500 status code
   const { id } = req.params;
   try {
+    //get the document details by id
+    //if the document is found, return the document details
+    //if the document is not found, return a 404 status code
+    //if there is a server error, return a 500 status code
     const docQuery = 'SELECT * FROM public."Document" WHERE document_id = $1';
     const docResult = await pool.query(docQuery, [id]);
     if (docResult.rows.length === 0) {
       return res.status(404).json({ success: false, message: "Document not found" });
     }
+    //get the document details
+    //if the document details are found, return the document details
+    //if the document details are not found, return a 404 status code
+    //if there is a server error, return a 500 status code
     const document = docResult.rows[0];
     const queries = [
       pool.query('SELECT * FROM public."Book" WHERE document_id = $1', [id]),
@@ -228,8 +304,15 @@ app.get("/document/:id", async (req, res) => {
 });
 
 app.delete("/delete/document/:id", async (req, res) => {
+  //this function is used to delete a document by id
+  //it takes the id as a parameter
+  //it returns a success message if the document is deleted successfully
+  //it returns an error message if the document is not deleted successfully
   const { id } = req.params;
   try {
+    //delete the document by id
+    //if the document is deleted successfully, return a success message
+    //if the document is not deleted successfully, return an error message
     await pool.query("BEGIN");
     const docTypeQuery = 'SELECT document_type FROM public."Document" WHERE document_id = $1';
     const typeResult = await pool.query(docTypeQuery, [id]);
@@ -238,6 +321,10 @@ app.delete("/delete/document/:id", async (req, res) => {
     }
     const documentType = typeResult.rows[0].document_type;
     let deleteDetailQuery = "";
+    //delete the document details based on the document type
+    //if the document type is paper, delete the book or magazine details
+    //if the document type is electronic, delete the journal article details
+    //if the document type is unknown, return an error message
     switch (documentType) {
       case "paper":
         const checkBook = 'SELECT * FROM public."Book" WHERE document_id = $1';
@@ -267,12 +354,23 @@ app.delete("/delete/document/:id", async (req, res) => {
 });
 
 app.post("/update/document", async (req, res) => {
+  //this function is used to update a document
+  //it takes the id, title, authors, isbn, publisher, year, edition, pages, month, issue_number, article_number and type as parameters
+  //it returns a success message if the document is updated successfully
+  //it returns an error message if the document is not updated successfully
   const { id, title, authors, isbn, publisher, year, edition, pages, month, issue_number, article_number, type, } = req.body;
   try {
+    //update the document by id
+    //if the document is updated successfully, return a success message
+    //if the document is not updated successfully, return an error message
     const updateDocQuery = `UPDATE public."Document" SET title = $1, publisher = $2, year = $3 WHERE document_id = $4`;
     await pool.query(updateDocQuery, [title, publisher, year, id]);
     let updateDetailsQuery = "";
     let params = [];
+    //update the document details based on the document type
+    //if the document type is paper, update the book or magazine details
+    //if the document type is electronic, update the journal article details
+    //if the document type is unknown, return an error message
     switch (type) {
       case "Book":
         updateDetailsQuery = `
@@ -306,12 +404,18 @@ app.post("/update/document", async (req, res) => {
 });
 
 app.post("/create/client", async (req, res) => {
+  //this function is used to create a client
+  //it takes the email and name as parameters
+  //it returns a success message if the client is created successfully
   const { email, name } = req.body;
   if (!email || !name) {
     return res.status(400).json({ success: false, message: "Both email and name are required." });
   }
 
   try {
+    //check if the client already exists
+    //if the client already exists, return an error message
+    //if the client does not exist, create the client
     const existsQuery = 'SELECT 1 FROM public."Clients" WHERE email = $1';
     const existsResult = await pool.query(existsQuery, [email]);
     if (existsResult.rowCount > 0) {
@@ -326,6 +430,9 @@ app.post("/create/client", async (req, res) => {
 });
 
 app.get("/client/:email", async (req, res) => {
+  //this function is used to get the client details by email  
+  //it takes the email as a parameter and returns the client details
+  //if the client is not found, it returns a 404 status code
     const { email } = req.params;
     try {
       const query = 'SELECT * FROM "Clients" WHERE email = $1';
@@ -342,11 +449,17 @@ app.get("/client/:email", async (req, res) => {
   
 
 app.post("/update/client", async (req, res) => {
+  //this function is used to update a client
+  //it takes the current email, new email and name as parameters
+  //it returns a success message if the client is updated successfully
   const { currentEmail, newEmail, name } = req.body;
   if (!currentEmail || !name) {
     return res.status(400).json({ success: false, message: "Current email and name are required.", });
   }
   try {
+    //check if the client exists
+    //if the client does not exist, return an error message
+    //if the client exists, update the client
     const clientExist = await pool.query(
       'SELECT * FROM public."Clients" WHERE email = $1',
       [currentEmail]
@@ -356,6 +469,7 @@ app.post("/update/client", async (req, res) => {
         .status(404)
         .json({ success: false, message: "Client not found." });
     }
+    //update the client
     const updateQuery = 'UPDATE public."Clients" SET email = $1, name = $2 WHERE email = $3 RETURNING *';
     const params = [newEmail || currentEmail, name, currentEmail];
     const updateResult = await pool.query(updateQuery, params);
@@ -371,12 +485,17 @@ app.post("/update/client", async (req, res) => {
 });
 
 app.post("/update/librarian", async (req, res) => {
+  //this function is used to update a librarian
+  //it takes the ssn, name, email and salary as parameters
   const { ssn, name, email, salary } = req.body;
   if (!ssn || !name || !email || !salary) {
     return res.status(400).json({ success: false, message: "All fields are required" });
   }
-
+  //check if the librarian exists
+  //if the librarian does not exist, return an error message
+  //if the librarian exists, update the librarian
   try {
+    //check if the librarian exists
     const result = await pool.query('UPDATE public."Librarians" SET name = $1, email = $2, salary = $3 WHERE ssn = $4 RETURNING *;', [name, email, salary, ssn]);
     if (result.rows.length > 0) {
       res.json({ success: true, message: "Librarian updated successfully", data: result.rows[0], });
@@ -389,7 +508,12 @@ app.post("/update/librarian", async (req, res) => {
 });
 
 app.get('/inventory', async (req, res) => {
+  //this function is used to get the inventory
+  //it returns the inventory
     try {
+      //get the inventory
+      //if the inventory is found, return the inventory
+      //if the inventory is not found, return a 404 status code
         const inventoryQuery = `
             SELECT d.document_id, d.title, COUNT(dc.copy_id) AS total_copies, COUNT(l.lending_id) AS loaned_copies FROM public."Document" d LEFT JOIN public."DocumentCopy" dc ON d.document_id = dc.document_id LEFT JOIN public."Lending" l ON dc.copy_id = l.copy_id AND l.return_date > CURRENT_DATE GROUP BY d.document_id ORDER BY d.title;
         `;
@@ -406,7 +530,10 @@ app.get('/inventory', async (req, res) => {
 });
 
 app.get("/overdues", async (req, res) => {
+  //this function is used to get the overdue loans
+  //it returns the overdue loans
     try {
+      //get the overdue loans
         const overdueQuery = `
             SELECT l.lending_id, d.title AS documentTitle, c.email AS clientEmail, l.return_date AS dueDate, (CURRENT_DATE - l.return_date) AS daysOverdue, CASE WHEN CURRENT_DATE > l.return_date THEN ROUND((CURRENT_DATE - l.return_date) * 1.5, 2) ELSE 0 END AS fee FROM public."Lending" l JOIN public."DocumentCopy" dc ON l.copy_id = dc.copy_id JOIN public."Document" d ON dc.document_id = d.document_id JOIN public."Clients" c ON l.client_email = c.email WHERE l.return_date < CURRENT_DATE`;
         const result = await pool.query(overdueQuery);
@@ -560,6 +687,8 @@ app.post("/search/documents", async (req, res) => {
 });
 
 app.post("/document/copies", async (req, res) => {
+  //this function is used to get the number of copies for a list of documents
+  //it takes the documentIds as a parameter and returns the number of copies for each document
   const { documentIds } = req.body;
   try {
     const query = `SELECT document_id, COUNT(copy_id) AS copy_count FROM public."DocumentCopy" WHERE document_id = ANY($1) GROUP BY document_id;`;
@@ -571,12 +700,16 @@ app.post("/document/copies", async (req, res) => {
 });
 
 app.post("/create/copy", async (req, res) => {
+  //this function is used to create copies of a document
+  //it takes the document_id and numCopies as parameters
   const { document_id, numCopies } = req.body;
   if (!document_id || numCopies <= 0) {
     return res.status(400).json({ success: false, message: "Invalid document ID or number of copies", });
   }
   console.log(document_id);
   try {
+    //create copies of a document
+    //if the copies are created successfully, return a success message
     for (let i = 0; i < numCopies; i++) {
       const insertQuery =
         'INSERT INTO public."DocumentCopy" (document_id) VALUES ($1)';
@@ -589,6 +722,8 @@ app.post("/create/copy", async (req, res) => {
 });
 
 app.post("/create/lending", async (req, res) => {
+  //this function is used to create a lending record
+  //it takes the document_id, client_email, lend_date and return_date as parameters
   const { document_id, client_email, lend_date, return_date } = req.body;
   if (!document_id || !client_email || !lend_date || !return_date) {
     return res.status(400).json({ success: false, message: "All fields are required." });
@@ -626,6 +761,9 @@ app.post("/create/lending", async (req, res) => {
 });
 
 app.get("/lendings/active-loans", async (req, res) => {
+  //this function is used to get the active lendings
+  //it returns the active lendings
+  //if there are no active lendings, it returns a 404 status code
     try {
       const query = `
               SELECT 
@@ -658,6 +796,10 @@ app.get("/lendings/active-loans", async (req, res) => {
   });
 
 app.get("/lendings/:client_email", async (req, res) => {
+  //this function is used to get the lendings for a client
+  //it takes the client_email as a parameter and returns the lendings for the client
+  //if there are no lendings for the client, it returns a 404 status code
+  //if there is a server error, it returns a 500 status code
   const { client_email } = req.params;
   try {
     const query = `SELECT l.lending_id, l.copy_id, l.lend_date, l.return_date, d.title, (CURRENT_DATE > l.return_date) AS is_overdue FROM public."Lending" l JOIN public."DocumentCopy" dc ON l.copy_id = dc.copy_id JOIN public."Document" d ON dc.document_id = d.document_id WHERE l.client_email = $1;`;
@@ -674,6 +816,9 @@ app.get("/lendings/:client_email", async (req, res) => {
 });
 
 app.delete("/delete/lending/:lending_id", async (req, res) => {
+  //this function is used to delete a lending record by id
+  //it takes the lending_id as a parameter
+  //it returns a success message if the lending record is deleted successfully
   const { lending_id } = req.params;
   try {
     const deleteQuery = 'DELETE FROM public."Lending" WHERE lending_id = $1';
@@ -689,6 +834,10 @@ app.delete("/delete/lending/:lending_id", async (req, res) => {
 });
 
 app.delete('/clients/:email', async (req, res) => {
+  //this function is used to delete a client by email
+  //it takes the email as a parameter
+  //it returns a success message if the client is deleted successfully
+  //it returns an error message if the client is not deleted successfully
     const { email } = req.params;
     try {
         const deleteQuery = 'DELETE FROM public."Clients" WHERE email = $1';
@@ -704,6 +853,9 @@ app.delete('/clients/:email', async (req, res) => {
 });
 
 app.post('/client/addCard', async (req, res) => {
+  //this function is used to add a credit card to a client
+  //it takes the cardNumber and clientEmail as parameters
+  //it returns a success message if the card is added successfully
     const { cardNumber, clientEmail } = req.body;
     if (!cardNumber || !clientEmail) {
         return res.status(400).json({ success: false, message: 'Missing required fields' });
@@ -725,6 +877,9 @@ app.post('/client/addCard', async (req, res) => {
 });
 
 app.get('/client/:email/cards', async (req, res) => {
+  //this function is used to get the credit cards for a client
+  //it takes the email as a parameter and returns the credit cards for the client
+  //if there are no credit cards for the client, it returns a 404 status code
   const { email } = req.params;
   console.log("HELLO");
   console.log(email);
@@ -744,6 +899,9 @@ app.get('/client/:email/cards', async (req, res) => {
 
 
 app.delete('/client/:email/cards/:cardNumber', async (req, res) => {
+  //this function is used to delete a credit card for a client
+  //it takes the email and cardNumber as parameters
+  //it returns a success message if the card is deleted successfully
     const { email, cardNumber } = req.params;
     try {
         const deleteQuery = `DELETE FROM "CreditCards" WHERE client_email = $1 AND card_number = $2;`;
@@ -759,6 +917,9 @@ app.delete('/client/:email/cards/:cardNumber', async (req, res) => {
 });
 
 app.put('/client/:email/cards/:oldCardNumber', async (req, res) => {
+  //this function is used to update a credit card for a client
+  //it takes the email, oldCardNumber and newCardNumber as parameters
+  //it returns a success message if the card is updated successfully
   const { email, oldCardNumber } = req.params;
   const { newCardNumber } = req.body;
   console.log(email);
@@ -790,7 +951,8 @@ app.put('/client/:email/cards/:oldCardNumber', async (req, res) => {
 
 
 app.get('/client/:email/hasCard', async (req, res) => {
-
+  //this function is used to check if a client has a credit card
+  //it takes the email as a parameter and returns a boolean value indicating whether the client has a credit card
   const { email } = req.params;
     try {
         const query = `SELECT EXISTS(SELECT 1 FROM "CreditCards" WHERE client_email = $1)`;
