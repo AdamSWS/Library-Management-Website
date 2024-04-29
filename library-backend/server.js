@@ -421,7 +421,7 @@ app.get("/overdues", async (req, res) => {
 });
 
 app.post("/search/documents", async (req, res) => {
-  const { query, type } = req.body;
+  const { query, type} = req.body;
   console.log(query, type);
   console.log(req.body);
   //to do
@@ -430,6 +430,12 @@ app.post("/search/documents", async (req, res) => {
   // author is a string
   // title is a string
 
+  // check if the method is title, author or ISBN or any
+  // if method is any, search for all documents with title, author or ISBN matching the query
+  // else search for documents with title, author or ISBN matching the query based on the method
+  // use ILIKE for case-insensitive search
+
+  
   switch (type) {
     case "All":
       try {
@@ -461,8 +467,8 @@ app.post("/search/documents", async (req, res) => {
           .json({ success: false, message: "Server error", data: [] });
       }
       break;
-    case "Book":
-      // search for books with title, author or ISBN matching the query
+    case "Title":
+      // search for all documents with title matching the query
       // use ILIKE for case-insensitive search
       // get isbns from books
       // get authors from documentauthor and authors
@@ -474,10 +480,10 @@ app.post("/search/documents", async (req, res) => {
                     STRING_AGG(a.name, ', ') AS authors,
                     d.year AS year
                 FROM public."Document" d
-                JOIN public."Book" b ON d.document_id = b.document_id
+                LEFT JOIN public."Book" b ON d.document_id = b.document_id
                 LEFT JOIN public."DocumentAuthor" da ON d.document_id = da.document_id
                 LEFT JOIN public."Author" a ON da.author_id = a.author_id
-                WHERE d.title ILIKE $1 OR b.isbn ILIKE $1 OR a.name ILIKE $1
+                WHERE d.title ILIKE $1
                 GROUP BY d.document_id, d.title, b.isbn, d.year
                 ORDER BY d.title`;
         const searchResult = await pool.query(searchQuery, [`%${query}%`]);
@@ -489,24 +495,24 @@ app.post("/search/documents", async (req, res) => {
           .json({ success: false, message: "Server error", data: [] });
       }
       break;
-    case "Magazine":
-      // search for magazines with title, author or ISBN matching the query
+    case "Author":
+      // search for Author matching the query
       // use ILIKE for case-insensitive search
       // get isbns from magazines
       // get authors from documentauthor and authors
       // combine results
       try {
         const searchQuery = `
-                SELECT d.title,
+                SELECT d.document_id, d.title,
                     m.isbn,
                     STRING_AGG(a.name, ', ') AS authors,
                     d.year AS year
                 FROM public."Document" d
-                JOIN public."Magazine" m ON d.document_id = m.document_id
+                LEFT JOIN public."Magazine" m ON d.document_id = m.document_id
                 LEFT JOIN public."DocumentAuthor" da ON d.document_id = da.document_id
                 LEFT JOIN public."Author" a ON da.author_id = a.author_id
-                WHERE d.title ILIKE $1 OR m.isbn ILIKE $1 OR a.name ILIKE $1
-                GROUP BY d.title, m.isbn, d.year
+                WHERE a.name ILIKE $1
+                GROUP BY d.document_id, d.title, m.isbn, d.year
                 ORDER BY d.title`;
         const searchResult = await pool.query(searchQuery, [`%${query}%`]);
         res.status(200).json({ success: true, data: searchResult.rows });
@@ -518,23 +524,24 @@ app.post("/search/documents", async (req, res) => {
       }
 
       break;
-    case "Journal Article":
-      // search for journal articles with title, author or ISBN matching the query
+    case "ISBN":
+      // search for ISBN matching the query
       // use ILIKE for case-insensitive search
       // get authors from documentauthor and authors
       // combine results
       const searchQuery = `
-            SELECT d.title,
-                ja.journal_name AS journal,
-                ja.issue_number AS issue,
-                ja.article_number AS article,
-                d.year AS year
-            FROM public."Document" d
-            JOIN public."JournalArticle" ja ON d.document_id = ja.document_id
-            LEFT JOIN public."DocumentAuthor" da ON d.document_id = da.document_id
-            LEFT JOIN public."Author" a ON da.author_id = a.author_id
-            WHERE d.title ILIKE $1 OR ja.journal_name ILIKE $1 OR a.name ILIKE $1
-            ORDER BY d.title`;
+              SELECT d.document_id, d.title,
+                  b.isbn,
+                  STRING_AGG(a.name, ', ') AS authors,
+                  d.year AS year
+              FROM public."Document" d
+              LEFT JOIN public."Book" b ON d.document_id = b.document_id
+              LEFT JOIN public."DocumentAuthor" da ON d.document_id = da.document_id
+              LEFT JOIN public."Author" a ON da.author_id = a.author_id
+              WHERE b.isbn ILIKE $1
+              GROUP BY d.document_id, d.title, b.isbn, d.year
+              ORDER BY d.title`;
+
       try {
         const searchResult = await pool.query(searchQuery, [`%${query}%`]);
         res.status(200).json({ success: true, data: searchResult.rows });
@@ -582,24 +589,32 @@ app.post("/create/copy", async (req, res) => {
 });
 
 app.post("/create/lending", async (req, res) => {
-  const { copy_id, client_email, lend_date, return_date } = req.body;
-  if (!copy_id || !client_email || !lend_date || !return_date) {
+  const { document_id, client_email, lend_date, return_date } = req.body;
+  if (!document_id || !client_email || !lend_date || !return_date) {
     return res.status(400).json({ success: false, message: "All fields are required." });
   }
-  console.log(copy_id);
+  console.log(document_id);
   console.log(client_email);
   console.log(lend_date);
   console.log(return_date);
   try {
-    const existsQuery = `SELECT * FROM public."Lending" WHERE copy_id = $1 AND client_email = $2`;
-    const existsResult = await pool.query(existsQuery, [copy_id, client_email]);
+    // const existsQuery = `SELECT * FROM public."Lending" WHERE document_id = $1 AND client_email = $2`;
+    //check if lending record already exists by matching document_id in DocumentCopy table and client_email in Lending table
+    const existsQuery = `SELECT * FROM public."Lending" l JOIN public."DocumentCopy" dc ON l.copy_id = dc.copy_id WHERE dc.document_id = $1 AND l.client_email = $2`;
+    const existsResult = await pool.query(existsQuery, [document_id, client_email]);
+
+    console.log(existsResult.rows);
 
     if (existsResult.rows.length > 0) {
       return res.status(409).json({ success: false, message: "Lending record already exists for this document and client.", });
     }
 
-    const insertQuery = `INSERT INTO public."Lending" (copy_id, client_email, lend_date, return_date) VALUES ($1, $2, $3, $4) RETURNING lending_id;`;
-    const result = await pool.query(insertQuery, [ copy_id, client_email, lend_date, return_date, ]);
+    // const insertQuery = `INSERT INTO public."Lending" (copy_id, client_email, lend_date, return_date) VALUES ($1, $2, $3, $4) RETURNING lending_id;`;
+    //get a copy_id from DocumentCopy table that is not already lent out
+    //and insert a new lending record with that copy_id
+    const insertQuery = `WITH available_copies AS (SELECT copy_id FROM public."DocumentCopy" WHERE document_id = $1 AND copy_id NOT IN (SELECT copy_id FROM public."Lending" WHERE return_date > CURRENT_DATE)) INSERT INTO public."Lending" (copy_id, client_email, lend_date, return_date) SELECT copy_id, $2, $3, $4 FROM available_copies LIMIT 1 RETURNING lending_id;`;
+    const result = await pool.query(insertQuery, [document_id, client_email, lend_date, return_date]);
+    console.log(result.rows)
     if (result.rows.length > 0) {
       res.json({ success: true, message: "Lending created successfully", lendingId: result.rows[0].lending_id, });
     } else {
