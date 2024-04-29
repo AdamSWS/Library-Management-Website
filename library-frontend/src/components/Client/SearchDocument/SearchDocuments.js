@@ -58,6 +58,7 @@ export default function SearchDocuments({ user }) {
         if (selectedDocumentId && user && lendDate && returnDate) {
             setLoading(true);
             try {
+                console.log(selectedDocumentId.document_id);
                 const response = await axios.post('http://localhost:4000/create/lending', {
                     copy_id: selectedDocumentId.document_id,
                     client_email: user.email,

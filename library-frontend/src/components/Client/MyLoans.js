@@ -56,7 +56,6 @@ export default function MyLoans({ user }) {
             setLoans(loanData);
         } catch (error) {
             console.error('Failed to fetch loans:', error);
-            alert('Failed to load your loans. Please try again later.');
         }
     };
     

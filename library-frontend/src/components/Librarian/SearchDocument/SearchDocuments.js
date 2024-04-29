@@ -54,6 +54,7 @@ export default function SearchDocuments() {
     const handleAddCopies = async () => {
         if (selectedDocumentId && numCopiesToAdd > 0) {
             setLoading(true);
+            console.log(selectedDocumentId.document_id);
             try {
                 const response = await axios.post('http://localhost:4000/create/copy', {
                     document_id: selectedDocumentId.document_id,

@@ -568,6 +568,7 @@ app.post("/create/copy", async (req, res) => {
   if (!document_id || numCopies <= 0) {
     return res.status(400).json({ success: false, message: "Invalid document ID or number of copies", });
   }
+  console.log(document_id);
   try {
     for (let i = 0; i < numCopies; i++) {
       const insertQuery =
@@ -585,6 +586,10 @@ app.post("/create/lending", async (req, res) => {
   if (!copy_id || !client_email || !lend_date || !return_date) {
     return res.status(400).json({ success: false, message: "All fields are required." });
   }
+  console.log(copy_id);
+  console.log(client_email);
+  console.log(lend_date);
+  console.log(return_date);
   try {
     const existsQuery = `SELECT * FROM public."Lending" WHERE copy_id = $1 AND client_email = $2`;
     const existsResult = await pool.query(existsQuery, [copy_id, client_email]);
@@ -642,6 +647,7 @@ app.get("/lendings/:client_email", async (req, res) => {
   try {
     const query = `SELECT l.lending_id, l.copy_id, l.lend_date, l.return_date, d.title, (CURRENT_DATE > l.return_date) AS is_overdue FROM public."Lending" l JOIN public."DocumentCopy" dc ON l.copy_id = dc.copy_id JOIN public."Document" d ON dc.document_id = d.document_id WHERE l.client_email = $1;`;
     const result = await pool.query(query, [client_email]);
+    console.log(result);
     if (result.rows.length > 0) {
       res.json({ success: true, data: result.rows });
     } else {
@@ -687,9 +693,12 @@ app.post('/client/addCard', async (req, res) => {
     if (!cardNumber || !clientEmail) {
         return res.status(400).json({ success: false, message: 'Missing required fields' });
     }
+    console.log(cardNumber);
+    console.log(clientEmail);
     try {
         const insertQuery = `INSERT INTO "CreditCards" (card_number, client_email) VALUES ($1, $2) RETURNING *;`;
         const result = await pool.query(insertQuery, [cardNumber, clientEmail]);
+        console.log(result);
         if (result.rows.length > 0) {
             res.json({ success: true, card: result.rows[0], message: 'Card added successfully' });
         } else {
@@ -739,7 +748,7 @@ app.put('/client/:email/cards/:oldCardNumber', async (req, res) => {
   const { newCardNumber } = req.body;
   console.log(email);
   console.log(newCardNumber);
-  console.log(selectedCard.card_number);
+  console.log(oldCardNumber);
   if (!newCardNumber) {
       return res.status(400).json({ success: false, message: "New card number must be provided" });
   }
@@ -747,11 +756,12 @@ app.put('/client/:email/cards/:oldCardNumber', async (req, res) => {
   try {
       const updateQuery = `
           UPDATE "CreditCards" 
-          SET card_number = $3 
-          WHERE client_email = $2 AND card_number = $1 
+          SET card_number = $1  
+          WHERE client_email = $2 AND card_number = $3
           RETURNING *;
       `;
       const result = await pool.query(updateQuery, [newCardNumber, email, oldCardNumber]);
+      console.log(result);
       if (result.rows.length > 0) {
           res.json({ success: true, card: result.rows[0], message: 'Card updated successfully' });
       } else {
